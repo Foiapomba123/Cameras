@@ -5,6 +5,12 @@ import {
   Container,
   Title,
   Card,
+  FeaturedCard,
+  FeaturedCardTitle,
+  FeaturedCardValue,
+  FeaturedCardSubtitle,
+  FeaturedCardAccent,
+  FeaturedCardIcon,
 } from '../components/StyledComponents';
 import { theme } from '../theme';
 
@@ -40,12 +46,15 @@ export const DashboardScreen: React.FC = () => {
           </Card>
         </View>
         
-        <Card>
-          <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 16 }}>TOTAL PRODUZIDO</Text>
-          <Text style={{ fontSize: 48, fontWeight: 'bold', textAlign: 'center' }}>
-            {productionStats.totalProduced}
-          </Text>
-        </Card>
+        <FeaturedCard>
+          <FeaturedCardAccent />
+          <FeaturedCardIcon>
+            <Text style={{ color: theme.colors.white, fontSize: 16, fontWeight: 'bold' }}>📊</Text>
+          </FeaturedCardIcon>
+          <FeaturedCardTitle>Total Produzido</FeaturedCardTitle>
+          <FeaturedCardValue>{productionStats.totalProduced.toLocaleString()}</FeaturedCardValue>
+          <FeaturedCardSubtitle>Unidades produzidas no período</FeaturedCardSubtitle>
+        </FeaturedCard>
         
         <Card style={{ marginTop: 16 }}>
           <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 16 }}>TOTAL PRODUZIDO / HORA</Text>
