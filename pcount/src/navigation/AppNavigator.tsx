@@ -2,7 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useAuth } from '../contexts/AuthContext';
+import { CustomHeader } from '../components/CustomHeader';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ContractScreen } from '../screens/ContractScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
@@ -19,27 +21,37 @@ const MainTabs = () => {
       screenOptions={{
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#8E8E93',
+        header: () => <CustomHeader />,
       }}
     >
       <Tab.Screen 
         name="Dashboard" 
         component={DashboardScreen}
         options={{
-          tabBarLabel: 'Dashboard',
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="dashboard" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen 
         name="Lines" 
         component={LinesScreen}
         options={{
-          tabBarLabel: 'Linhas',
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="view-list" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen 
         name="Production" 
         component={ProductionScreen}
         options={{
-          tabBarLabel: 'Produção',
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="precision-manufacturing" size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -51,15 +63,38 @@ export const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator 
+        screenOptions={{ 
+          headerShown: true,
+          header: () => <CustomHeader />,
+        }}
+      >
         {!isAuthenticated ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
         ) : !selectedContract ? (
-          <Stack.Screen name="ContractScreen" component={ContractScreen} />
+          <Stack.Screen 
+            name="ContractScreen" 
+            component={ContractScreen}
+            options={{ headerShown: false }}
+          />
         ) : (
           <>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="LineDetail" component={LineDetailScreen} />
+            <Stack.Screen 
+              name="MainTabs" 
+              component={MainTabs}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="LineDetail" 
+              component={LineDetailScreen}
+              options={{ 
+                header: () => <CustomHeader title="Produção de linha" showBackButton={true} />
+              }}
+            />
           </>
         )}
       </Stack.Navigator>

@@ -79,35 +79,6 @@ export const LineDetailScreen: React.FC<LineDetailScreenProps> = ({ route, navig
 
   return (
     <Container>
-      {/* Header */}
-      <View style={{ 
-        backgroundColor: theme.colors.primary,
-        paddingHorizontal: 16,
-        paddingVertical: 20,
-        paddingTop: 50
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={{ color: theme.colors.white, fontSize: 18, marginRight: 16 }}>←</Text>
-          </TouchableOpacity>
-          <View>
-            <Text style={{ 
-              color: theme.colors.white,
-              fontSize: 18,
-              fontWeight: 'bold'
-            }}>
-              Produção de linha
-            </Text>
-            <Text style={{ 
-              color: theme.colors.white,
-              fontSize: 16
-            }}>
-              {line.name} {line.company || 'Guaravita'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
       <ScrollView style={{ padding: 16 }}>
         {/* Produção Ativa */}
         {activeProductions.length > 0 && (
