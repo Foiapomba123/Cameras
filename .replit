@@ -33,14 +33,6 @@ waitForPort = 5000
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 41597
-externalPort = 3001
-
-[[ports]]
-localPort = 45567
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "autoscale"
 run = ["npx", "serve", "-s", "dist"]
