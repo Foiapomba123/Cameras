@@ -34,7 +34,7 @@ PCOUNT is a React Native web application built with Expo for production line mon
 ## Deployment Configuration
 - **Target**: Autoscale (stateless web application)
 - **Build**: `npx expo export --platform web` (creates optimized build)
-- **Run**: `npx serve -s dist -p 5000` (serves static files)
+- **Run**: `npx serve -s dist -l $PORT` (serves static files on dynamic port)
 - **Dependencies**: serve package installed for production deployment
 
 ## User Preferences
