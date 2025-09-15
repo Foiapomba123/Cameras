@@ -1,84 +1,76 @@
 # PCOUNT - Production Monitoring Application
 
 ## Overview
-
-PCOUNT is a React Native production monitoring application built with Expo, designed for tracking and managing production lines. The application provides real-time monitoring capabilities, production statistics, and multi-contract support with a web-optimized responsive design. It features a dashboard with production metrics, line management, and QR code scanning functionality for production selection.
+PCOUNT is a React Native web application built with Expo for production line monitoring and counting. The application provides a comprehensive dashboard for tracking production statistics, managing production lines, and monitoring manufacturing processes. It features a contract-based workflow where users authenticate, select a contract, and then access production monitoring tools through a tabbed interface.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
 ### Frontend Architecture
-- **Framework**: Expo React Native with web platform support via react-native-web
-- **Language**: TypeScript with strict mode enabled for type safety
-- **Navigation**: React Navigation v7 with hybrid stack and bottom tab navigation
-- **Styling**: Styled Components for React Native providing theme-based component styling
-- **State Management**: React Context API for authentication and global state
-- **UI Components**: Custom styled components with consistent theming system
+- **Framework**: Expo React Native (~54.0.7) configured for web deployment
+- **Language**: TypeScript with strict type checking and react-jsx transform
+- **Styling**: Styled Components for React Native with a centralized theme system
+- **Navigation**: React Navigation v7 with nested navigation (Stack + Bottom Tabs)
+  - Stack Navigator for authentication flow (Login → Contract Selection → Main App)
+  - Bottom Tab Navigator for main features (Dashboard, Lines, Production)
+- **State Management**: React Context API for authentication state and user session management
+- **UI Components**: Custom styled components with consistent theming and responsive design
 
-### Authentication Flow
-- **Method**: Simple credential-based authentication with mock user validation
+### Authentication & Authorization
+- **Authentication**: Context-based authentication with mock user validation
 - **Default Credentials**: Admin/Admin for demonstration purposes
-- **Flow**: Login → Contract Selection → Main Application (Tab Navigation)
-- **Context**: Global authentication state managed through React Context
+- **User Roles**: Admin and operator roles with different access levels
+- **Session Flow**: Login → Contract Selection → Main Application Access
+- **Contract System**: Multi-contract support requiring selection before accessing production data
 
-### Navigation Structure
-- **Conditional Rendering**: Authentication-based navigation switching
-- **Main Flow**: Bottom tab navigator with Dashboard, Lines, and Production screens
-- **Secondary Navigation**: Stack navigation for detailed views (LineDetail screen)
-- **Route Protection**: Automatic redirection based on authentication and contract selection state
+### Data Architecture
+- **Data Storage**: Mock data files for demonstration (users, contracts, production lines, productions)
+- **Type Safety**: Comprehensive TypeScript interfaces for all data models
+- **Data Models**:
+  - User management with roles and authentication
+  - Contract management with company associations
+  - Production line tracking with status monitoring
+  - Production records with technician assignments and timestamps
+  - Real-time production statistics and metrics
 
 ### Component Architecture
-- **Design System**: Centralized theme configuration with colors, fonts, spacing, and shadows
-- **Styled Components**: Reusable styled components following design system principles
-- **Responsive Design**: Screen dimension-aware components for web deployment
-- **Custom Charts**: SVG-based chart components for production statistics visualization
+- **Styled Components**: Centralized styling system with theme-based design tokens
+- **Reusable Components**: Modular UI components (Container, Card, Button, Input, etc.)
+- **Screen Components**: Feature-specific screens with navigation integration
+- **Custom Charts**: SVG-based chart components for production data visualization
 
-### Data Management
-- **Mock Data**: Static data files for users, contracts, production lines, and statistics
-- **Type Safety**: Comprehensive TypeScript interfaces for all data structures
-- **Separation of Concerns**: Data layer separated from presentation components
-
-### Cross-Platform Configuration
-- **Metro Bundler**: Configured for multi-platform support (iOS, Android, web)
-- **Asset Handling**: Expo asset pipeline with hash-based file naming
-- **Platform Detection**: Platform-specific configurations and optimizations
+### Development & Build Configuration
+- **Metro Bundler**: Custom configuration for multi-platform support (iOS, Android, Web)
+- **TypeScript**: ES2020 target with modern module resolution
+- **Web Platform**: React Native Web for browser compatibility
+- **Asset Management**: Expo asset pipeline with hashing for production builds
 
 ## External Dependencies
 
 ### Core Framework Dependencies
-- **Expo SDK 54.0.7**: Cross-platform development framework and build system
-- **React 19.1.0**: Core React library with latest JSX transform
-- **React Native 0.81.4**: Native mobile development framework
-- **React DOM 19.1.0**: Web rendering support
+- **Expo SDK**: Complete development platform for React Native applications
+- **React Navigation**: Navigation library with stack and tab navigation support
+- **React Native Screens**: Native navigation performance optimization
+- **React Native Safe Area Context**: Safe area handling for different device types
 
-### Navigation Dependencies
-- **@react-navigation/native 7.1.17**: Core navigation library
-- **@react-navigation/native-stack 7.3.26**: Stack navigation implementation
-- **@react-navigation/bottom-tabs 7.4.7**: Bottom tab navigation component
-- **react-native-screens 4.16.0**: Native screen management optimization
-- **react-native-safe-area-context 5.6.1**: Safe area handling for different devices
-
-### UI and Styling Dependencies
-- **styled-components 6.1.19**: CSS-in-JS styling solution for React Native
-- **react-native-vector-icons 10.3.0**: Icon library with multiple icon sets
-- **react-native-svg 15.12.1**: SVG rendering for custom charts and graphics
-- **expo-linear-gradient 15.0.7**: Gradient component support
-- **expo-status-bar 3.0.8**: Status bar configuration management
-
-### Web Platform Dependencies
-- **react-native-web 0.21.0**: React Native to web compilation layer
-- **serve 14.2.5**: Static file server for production deployment
+### UI & Styling Dependencies
+- **Styled Components**: CSS-in-JS styling solution for React Native
+- **React Native Vector Icons**: Icon library for UI elements
+- **React Native SVG**: SVG rendering for custom charts and graphics
+- **Expo Linear Gradient**: Gradient support for enhanced UI design
 
 ### Development Dependencies
-- **TypeScript 5.9.2**: Static type checking and development tooling
-- **@types/react 19.1.0**: React TypeScript type definitions
-- **@types/react-native-vector-icons 6.4.18**: Vector icons TypeScript definitions
-- **@types/styled-components-react-native 5.2.5**: Styled components TypeScript definitions
+- **TypeScript**: Static type checking and enhanced development experience
+- **Expo Metro Config**: Build system configuration and optimization
 
-### Development and Build Tools
-- **Expo CLI**: Development server and build tooling
-- **Metro Bundler**: JavaScript bundler with React Native support
-- **TypeScript Compiler**: Type checking and JavaScript compilation
+### Production Dependencies
+- **React Native Web**: Web platform support for browser deployment
+- **Serve**: Static file server for production web deployment
+
+### Deployment Configuration
+- **Build Target**: Web platform with static file generation
+- **Production Server**: Serve package for static file hosting
+- **Port Configuration**: Dynamic port binding for cloud deployment environments
+- **Asset Optimization**: Expo's built-in asset optimization and bundling
