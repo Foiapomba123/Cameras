@@ -83,3 +83,72 @@ export const StatusIndicator = styled.View<{ status: 'produzindo' | 'aguardando'
     }
   }};
 `;
+
+export const FeaturedCard = styled.View`
+  background-color: ${theme.colors.white};
+  border-radius: ${theme.borderRadius.xl}px;
+  padding: ${theme.spacing.xl}px;
+  margin: ${theme.spacing.md}px 0;
+  border-width: 2px;
+  border-color: rgba(0, 122, 255, 0.15);
+  shadow-color: ${theme.colors.primary};
+  shadow-offset: 0px 6px;
+  shadow-opacity: 0.15;
+  shadow-radius: 12px;
+  elevation: 8;
+  position: relative;
+  overflow: hidden;
+`;
+
+export const FeaturedCardTitle = styled.Text`
+  font-size: ${theme.fontSizes.medium}px;
+  font-weight: 600;
+  color: ${theme.colors.primary};
+  text-align: center;
+  margin-bottom: ${theme.spacing.lg}px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+`;
+
+export const FeaturedCardValue = styled.Text`
+  font-size: 52px;
+  font-weight: 800;
+  color: ${theme.colors.text};
+  text-align: center;
+  margin-bottom: ${theme.spacing.md}px;
+  line-height: 56px;
+`;
+
+export const FeaturedCardSubtitle = styled.Text`
+  font-size: ${theme.fontSizes.small}px;
+  color: ${theme.colors.textSecondary};
+  text-align: center;
+  font-weight: 500;
+`;
+
+export const FeaturedCardAccent = styled.View`
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  background-color: rgba(0, 122, 255, 0.06);
+`;
+
+export const FeaturedCardIcon = styled.View`
+  position: absolute;
+  top: ${theme.spacing.lg}px;
+  right: ${theme.spacing.lg}px;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: ${theme.colors.primary};
+  justify-content: center;
+  align-items: center;
+  shadow-color: ${theme.colors.primary};
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.25;
+  shadow-radius: 4px;
+  elevation: 4;
+`;
