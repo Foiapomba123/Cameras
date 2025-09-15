@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 
@@ -22,46 +22,35 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
       paddingTop: 50,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between'
+      justifyContent: 'center',
+      position: 'relative'
     }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-        {showBackButton && (
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()}
-            style={{ marginRight: 16 }}
-          >
-            <Text style={{ color: theme.colors.white, fontSize: 18 }}>←</Text>
-          </TouchableOpacity>
-        )}
-        
-        <Image 
-          source={require('../../assets/icon.png')} 
-          style={{ 
-            width: 28, 
-            height: 28, 
-            marginRight: 8 
-          }}
-          resizeMode="contain"
-        />
-        
-        <View>
+      {showBackButton && (
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          style={{ position: 'absolute', left: 16, zIndex: 1 }}
+        >
+          <Text style={{ color: theme.colors.white, fontSize: 18 }}>←</Text>
+        </TouchableOpacity>
+      )}
+      
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{
+          color: theme.colors.white,
+          fontSize: 20,
+          fontWeight: 'bold'
+        }}>
+          PCOUNT
+        </Text>
+        {title && (
           <Text style={{
             color: theme.colors.white,
-            fontSize: 20,
-            fontWeight: 'bold'
+            fontSize: 14,
+            opacity: 0.9
           }}>
-            PCOUNT
+            {title}
           </Text>
-          {title && (
-            <Text style={{
-              color: theme.colors.white,
-              fontSize: 14,
-              opacity: 0.9
-            }}>
-              {title}
-            </Text>
-          )}
-        </View>
+        )}
       </View>
     </View>
   );

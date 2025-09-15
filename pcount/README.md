@@ -45,3 +45,4 @@ npm run build:web
 ---
 
 *Esta é uma aplicação de demonstração com dados mock para fins de teste e desenvolvimento.*
+*No aguardo da API*

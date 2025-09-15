@@ -42,7 +42,12 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: User | null;
   selectedContract: Contract | null;
+  contracts: Contract[];
+  loading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   selectContract: (contract: Contract) => void;
   logout: () => void;
+  loadContracts: () => Promise<void>;
+  clearError: () => void;
 }
