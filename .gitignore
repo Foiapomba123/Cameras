@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Replit specific
+.config/
+.local/
+docs/replit-assets/
+
+# VSCode
+.vscode/
