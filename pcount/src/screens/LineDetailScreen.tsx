@@ -1,10 +1,13 @@
 import React from 'react';
 import { ScrollView, View, Text, TouchableOpacity } from 'react-native';
-import { productions } from '../data/productions';
+import { useProductions } from '../hooks/useProductions';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Container,
   Card,
 } from '../components/StyledComponents';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { theme } from '../theme';
 
 interface LineDetailScreenProps {
@@ -14,9 +17,45 @@ interface LineDetailScreenProps {
 
 export const LineDetailScreen: React.FC<LineDetailScreenProps> = ({ route, navigation }) => {
   const { line } = route.params;
+  const { selectedContract } = useAuth();
   
-  // Filtrar produções da linha específica
-  const lineProductions = productions.filter(prod => prod.lineId === line.id);
+  // Buscar produções usando o contrato selecionado e filtrar por linha
+  // Hook fará no-op se contratoId for falsy
+  const { data: allProductions, loading, error } = useProductions(
+    selectedContract?.id,
+    { lineId: line.id }
+  );
+
+  // Verificar se um contrato foi selecionado
+  if (!selectedContract) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <ErrorMessage 
+          message="Nenhum contrato selecionado. Por favor, faça login novamente."
+        />
+      </Container>
+    );
+  }
+
+  // Mostrar loading
+  if (loading) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <LoadingSpinner />
+      </Container>
+    );
+  }
+
+  // Mostrar erro
+  if (error) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <ErrorMessage message={error} />
+      </Container>
+    );
+  }
+
+  const lineProductions = allProductions || [];
   const activeProductions = lineProductions.filter(prod => prod.status === 'EM PRODUCAO');
   const finishedProductions = lineProductions.filter(prod => prod.status === 'FINALIZADA');
 

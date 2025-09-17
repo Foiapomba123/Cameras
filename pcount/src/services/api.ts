@@ -28,9 +28,11 @@ export class ApiService {
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
+        'equipamentoId': 'replit-web-client', // Header obrigatório para a API
         ...options.headers,
       },
     };
+
 
     try {
       const response = await fetch(url, config);

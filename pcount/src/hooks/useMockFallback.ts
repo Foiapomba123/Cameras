@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Production, ProductionLine, ProductionStats } from '../types';
 import { productions as mockProductions, productionStats as mockStats } from '../data/productions';
 import { productionLines as mockLines } from '../data/productionLines';
+import { productionLineService } from '../services/productionLineService';
+import { productionService } from '../services/productionService';
 
 // Hook para fallback de dados mock em desenvolvimento
 export function useMockFallback<T>(
@@ -51,10 +53,9 @@ export function useMockFallback<T>(
 export function useProductionLinesWithFallback(contractId?: string) {
   return useMockFallback(
     async () => {
-      const { productionLineService } = await import('../services/productionLineService');
       return contractId 
         ? productionLineService.getProductionLinesByContract(contractId)
-        : productionLineService.getProductionLines();
+        : productionLineService.getProductionLines(contractId || '');
     },
     mockLines,
     [contractId]
@@ -62,7 +63,7 @@ export function useProductionLinesWithFallback(contractId?: string) {
 }
 
 // Hook específico para produções com fallback
-export function useProductionsWithFallback(filters?: {
+export function useProductionsWithFallback(contractId: string, filters?: {
   lineId?: string;
   status?: Production['status'];
   startDate?: string;
@@ -70,26 +71,24 @@ export function useProductionsWithFallback(filters?: {
 }) {
   return useMockFallback(
     async () => {
-      const { productionService } = await import('../services/productionService');
-      return productionService.getProductions(filters);
+      return productionService.getProductions(contractId, filters);
     },
     mockProductions,
-    [filters?.lineId, filters?.status, filters?.startDate, filters?.endDate]
+    [contractId, filters?.lineId, filters?.status, filters?.startDate, filters?.endDate]
   );
 }
 
 // Hook específico para estatísticas com fallback
-export function useProductionStatsWithFallback(filters?: {
+export function useProductionStatsWithFallback(contractId: string, filters?: {
   lineId?: string;
   startDate?: string;
   endDate?: string;
 }) {
   return useMockFallback(
     async () => {
-      const { productionService } = await import('../services/productionService');
-      return productionService.getProductionStats(filters);
+      return productionService.getProductionStats(contractId, filters);
     },
     mockStats,
-    [filters?.lineId, filters?.startDate, filters?.endDate]
+    [contractId, filters?.lineId, filters?.startDate, filters?.endDate]
   );
 }

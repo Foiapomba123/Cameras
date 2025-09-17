@@ -23,6 +23,22 @@ export function useApi<T>(
   };
 
   useEffect(() => {
+    // Fazer no-op se alguma dependência crítica (como contratoId) for falsy
+    const shouldSkip = dependencies.some((dep, index) => {
+      // Primeiro parâmetro geralmente é contratoId - deve ser uma string válida
+      if (index === 0 && (typeof dep !== 'string' || dep.trim() === '')) {
+        return true;
+      }
+      return false;
+    });
+    
+    if (shouldSkip) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    
     fetchData();
   }, dependencies);
 

@@ -54,15 +54,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Tenta autenticar via API
-      const response = await authService.login(email, password);
-      setCurrentUser(response.user);
-      setIsAuthenticated(true);
+      // Verificar se um contrato foi selecionado
+      if (!selectedContract) {
+        setError('Por favor, selecione um contrato antes de fazer login');
+        return false;
+      }
       
-      // Carrega contratos após login
-      await loadContracts();
+      // Tenta autenticar via API com o contratoId selecionado
+      const response = await authService.login(email, password, selectedContract.id);
       
-      return true;
+      if (response.sucesso) {
+        // Criar usuário baseado na resposta ou usar dados padrão
+        const user: User = response.usuario || {
+          id: '1',
+          name: email,
+          email: email,
+          password: '',
+          role: 'admin'
+        };
+        
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        return true;
+      } else {
+        setError(response.mensagem || 'Credenciais inválidas');
+        return false;
+      }
     } catch (err) {
       // Fallback para desenvolvimento APENAS se habilitado
       const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true' && __DEV__;
@@ -75,10 +92,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
-          
-          // Carrega contratos (usará mock se API não estiver disponível)
-          await loadContracts();
-          
           return true;
         }
       }
@@ -115,12 +128,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
-  // Carrega contratos na inicialização se usuário estiver autenticado
+  // Carrega contratos na inicialização (não requer autenticação)
   useEffect(() => {
-    if (isAuthenticated && contracts.length === 0) {
+    if (contracts.length === 0) {
       loadContracts();
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const value: AuthContextType = {
     isAuthenticated,

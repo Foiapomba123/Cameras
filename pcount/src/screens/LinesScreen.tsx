@@ -1,12 +1,15 @@
 import React from 'react';
 import { FlatList, View, Text } from 'react-native';
-import { productionLines } from '../data/productionLines';
+import { useProductionLines } from '../hooks/useProductions';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Container,
   Title,
   Card,
   StatusIndicator,
 } from '../components/StyledComponents';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { theme } from '../theme';
 
 interface LinesScreenProps {
@@ -14,6 +17,14 @@ interface LinesScreenProps {
 }
 
 export const LinesScreen: React.FC<LinesScreenProps> = ({ navigation }) => {
+  const { selectedContract } = useAuth();
+  
+  // Buscar as linhas de produção usando o contrato selecionado
+  // Hook fará no-op se contratoId for falsy
+  const { data: productionLines, loading, error } = useProductionLines(
+    selectedContract?.id
+  );
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'produzindo': return 'Produzindo';
@@ -22,6 +33,49 @@ export const LinesScreen: React.FC<LinesScreenProps> = ({ navigation }) => {
       default: return status;
     }
   };
+
+  // Verificar se um contrato foi selecionado
+  if (!selectedContract) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <ErrorMessage 
+          message="Nenhum contrato selecionado. Por favor, faça login novamente."
+        />
+      </Container>
+    );
+  }
+
+  // Mostrar loading
+  if (loading) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <Title>Carregando Linhas...</Title>
+        <LoadingSpinner />
+      </Container>
+    );
+  }
+
+  // Mostrar erro
+  if (error) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <Title>Selecione uma Linha</Title>
+        <ErrorMessage message={error} />
+      </Container>
+    );
+  }
+
+  // Verificar se existem linhas
+  if (!productionLines || productionLines.length === 0) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <Title>Selecione uma Linha</Title>
+        <Text style={{ textAlign: 'center', marginTop: 32, color: theme.colors.textSecondary }}>
+          Nenhuma linha de produção encontrada para este contrato.
+        </Text>
+      </Container>
+    );
+  }
 
   return (
     <Container style={{ padding: 16 }}>

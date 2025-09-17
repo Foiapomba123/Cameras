@@ -63,7 +63,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           textAlign: 'center',
           marginTop: theme.spacing.md
         }}>
-          Usuário padrão: Admin | Senha: Admin
+          
         </Text>
       </CenteredContainer>
     </Container>

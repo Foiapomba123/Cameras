@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, ScrollView, Dimensions } from 'react-native';
 import { Svg, Rect, Text as SvgText, Line, G } from 'react-native-svg';
-import { productionStats } from '../data/productions';
+import { useProductionStats } from '../hooks/useProductions';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Container,
   Title,
@@ -13,12 +14,24 @@ import {
   FeaturedCardAccent,
   FeaturedCardIcon,
 } from '../components/StyledComponents';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { theme } from '../theme';
 
 const { width } = Dimensions.get('window');
 
 // Componente de gráfico de barras personalizado
 const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <View style={{ alignItems: 'center', marginVertical: 16, height: 200 }}>
+        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
+          Nenhum dado de produção disponível
+        </Text>
+      </View>
+    );
+  }
+
   const chartWidth = width - 96;
   const chartHeight = 200;
   const maxValue = Math.max(...data.map(d => d.value));
@@ -111,6 +124,56 @@ const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ 
 };
 
 export const DashboardScreen: React.FC = () => {
+  const { selectedContract } = useAuth();
+  
+  // Buscar as estatísticas de produção usando o contrato selecionado
+  // Hook fará no-op se contratoId for falsy
+  const { data: productionStats, loading, error } = useProductionStats(
+    selectedContract?.id
+  );
+
+  // Verificar se um contrato foi selecionado
+  if (!selectedContract) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <ErrorMessage 
+          message="Nenhum contrato selecionado. Por favor, faça login novamente."
+        />
+      </Container>
+    );
+  }
+
+  // Mostrar loading
+  if (loading) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <Title>Carregando Dashboard...</Title>
+        <LoadingSpinner />
+      </Container>
+    );
+  }
+
+  // Mostrar erro
+  if (error) {
+    return (
+      <Container>
+        <ScrollView style={{ padding: 16 }}>
+          <Title>Dashboard</Title>
+          <ErrorMessage message={error} />
+        </ScrollView>
+      </Container>
+    );
+  }
+
+  // Dados padrão caso não haja dados da API
+  const stats = productionStats || {
+    operationHours: '--',
+    productiveHours: '--',
+    avgProduction: 0,
+    totalProduced: 0,
+    hourlyProduction: [],
+  };
+
   return (
     <Container>
       <ScrollView style={{ padding: 16 }}>
@@ -120,7 +183,7 @@ export const DashboardScreen: React.FC = () => {
           <Card style={{ flex: 1, marginRight: 8 }}>
             <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Horas</Text>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.warning }}>
-              {productionStats.operationHours}
+              {stats.operationHours}
             </Text>
             <Text style={{ fontSize: 10 }}>Operação</Text>
           </Card>
@@ -128,7 +191,7 @@ export const DashboardScreen: React.FC = () => {
           <Card style={{ flex: 1, marginRight: 8 }}>
             <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Horas</Text>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.error }}>
-              {productionStats.productiveHours}
+              {stats.productiveHours}
             </Text>
             <Text style={{ fontSize: 10 }}>Produtivas</Text>
           </Card>
@@ -136,7 +199,7 @@ export const DashboardScreen: React.FC = () => {
           <Card style={{ flex: 1 }}>
             <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Produção</Text>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.info }}>
-              {productionStats.avgProduction}
+              {stats.avgProduction}
             </Text>
             <Text style={{ fontSize: 10 }}>Média / Hr</Text>
           </Card>
@@ -148,13 +211,13 @@ export const DashboardScreen: React.FC = () => {
             <Text style={{ color: theme.colors.white, fontSize: 16, fontWeight: 'bold' }}>📊</Text>
           </FeaturedCardIcon>
           <FeaturedCardTitle>Total Produzido</FeaturedCardTitle>
-          <FeaturedCardValue>{productionStats.totalProduced.toLocaleString()}</FeaturedCardValue>
+          <FeaturedCardValue>{stats.totalProduced.toLocaleString()}</FeaturedCardValue>
           <FeaturedCardSubtitle>Unidades produzidas no período</FeaturedCardSubtitle>
         </FeaturedCard>
         
         <Card style={{ marginTop: 16 }}>
           <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 16, color: theme.colors.text }}>TOTAL PRODUZIDO / HORA</Text>
-          <BarChart data={productionStats.hourlyProduction} />
+          <BarChart data={stats.hourlyProduction} />
           <Text style={{ 
             fontSize: 11, 
             color: theme.colors.textSecondary, 
