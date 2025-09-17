@@ -5,50 +5,48 @@ import { productionLineService } from '../services/productionLineService';
 import { useApi } from './useApi';
 
 // Hook para buscar produções
-export function useProductions(filters?: {
+export function useProductions(contratoId: string, filters?: {
   lineId?: string;
   status?: Production['status'];
   startDate?: string;
   endDate?: string;
 }) {
   return useApi(
-    () => productionService.getProductions(filters),
-    [filters?.lineId, filters?.status, filters?.startDate, filters?.endDate]
+    () => productionService.getProductions(contratoId, filters),
+    [contratoId, filters?.lineId, filters?.status, filters?.startDate, filters?.endDate]
   );
 }
 
 // Hook para buscar linhas de produção
-export function useProductionLines(contractId?: string) {
+export function useProductionLines(contractId: string) {
   return useApi(
-    () => contractId 
-      ? productionLineService.getProductionLinesByContract(contractId)
-      : productionLineService.getProductionLines(),
+    () => productionLineService.getProductionLines(contractId),
     [contractId]
   );
 }
 
 // Hook para buscar estatísticas de produção
-export function useProductionStats(filters?: {
+export function useProductionStats(contratoId: string, filters?: {
   lineId?: string;
   startDate?: string;
   endDate?: string;
 }) {
   return useApi(
-    () => productionService.getProductionStats(filters),
-    [filters?.lineId, filters?.startDate, filters?.endDate]
+    () => productionService.getProductionStats(contratoId, filters),
+    [contratoId, filters?.lineId, filters?.startDate, filters?.endDate]
   );
 }
 
 // Hook para operações manuais de produção
-export function useProductionOperations() {
+export function useProductionOperations(contratoId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createProduction = async (production: Omit<Production, 'id'>) => {
+  const createProduction = async (producaoData: any) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await productionService.createProduction(production);
+      const result = await productionService.createProduction(contratoId, producaoData);
       return result;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao criar produção';
@@ -59,11 +57,11 @@ export function useProductionOperations() {
     }
   };
 
-  const updateProduction = async (id: string, production: Partial<Production>) => {
+  const updateProduction = async (producaoData: any) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await productionService.updateProduction(id, production);
+      const result = await productionService.updateProduction(contratoId, producaoData);
       return result;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar produção';
@@ -74,11 +72,11 @@ export function useProductionOperations() {
     }
   };
 
-  const finishProduction = async (id: string) => {
+  const finishProduction = async (producaoData: any) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await productionService.finishProduction(id);
+      const result = await productionService.finishProduction(contratoId, producaoData);
       return result;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao finalizar produção';
@@ -89,26 +87,12 @@ export function useProductionOperations() {
     }
   };
 
-  const updateLineStatus = async (lineId: string, status: ProductionLine['status']) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await productionLineService.updateLineStatus(lineId, status);
-      return result;
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar status da linha';
-      setError(errorMsg);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  // updateLineStatus removido - operação não disponível na API atual
 
   return {
     createProduction,
     updateProduction,
     finishProduction,
-    updateLineStatus,
     loading,
     error,
     clearError: () => setError(null),

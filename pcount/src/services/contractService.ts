@@ -1,59 +1,60 @@
 import { Contract } from '../types';
 import { apiService } from './api';
+import { API_ENDPOINTS } from '../config/api';
+
+export interface ContratoDto {
+  id: string;
+  nome: string;
+  empresa: string;
+}
 
 export class ContractService {
   // Buscar todos os contratos
   async getContracts(): Promise<Contract[]> {
     try {
-      const response = await apiService.get<{ contracts: Contract[] }>('/contracts');
-      return response.contracts;
+      const response = await apiService.get<ContratoDto[]>(API_ENDPOINTS.CONTRACTS);
+      
+      // Mapear a resposta da API para o formato esperado pelo app
+      return response.map(contrato => ({
+        id: contrato.id,
+        name: contrato.nome,
+        company: contrato.empresa,
+      }));
     } catch (error) {
       console.error('Get contracts error:', error);
       throw error;
     }
   }
 
-  // Buscar contrato por ID
+  // Buscar contrato por ID (não disponível na API atual, usar o array de contratos)
   async getContractById(id: string): Promise<Contract> {
     try {
-      const response = await apiService.get<{ contract: Contract }>(`/contracts/${id}`);
-      return response.contract;
+      const contracts = await this.getContracts();
+      const contract = contracts.find(c => c.id === id);
+      
+      if (!contract) {
+        throw new Error(`Contrato com ID ${id} não encontrado`);
+      }
+      
+      return contract;
     } catch (error) {
       console.error('Get contract by ID error:', error);
       throw error;
     }
   }
 
-  // Criar novo contrato (admin)
+  // As operações de CRUD não estão disponíveis na API atual
+  // Mantendo os métodos para compatibilidade, mas retornando erro
   async createContract(contract: Omit<Contract, 'id'>): Promise<Contract> {
-    try {
-      const response = await apiService.post<{ contract: Contract }>('/contracts', contract);
-      return response.contract;
-    } catch (error) {
-      console.error('Create contract error:', error);
-      throw error;
-    }
+    throw new Error('Operação de criação de contrato não disponível na API atual');
   }
 
-  // Atualizar contrato (admin)
   async updateContract(id: string, contract: Partial<Contract>): Promise<Contract> {
-    try {
-      const response = await apiService.put<{ contract: Contract }>(`/contracts/${id}`, contract);
-      return response.contract;
-    } catch (error) {
-      console.error('Update contract error:', error);
-      throw error;
-    }
+    throw new Error('Operação de atualização de contrato não disponível na API atual');
   }
 
-  // Deletar contrato (admin)
   async deleteContract(id: string): Promise<void> {
-    try {
-      await apiService.delete(`/contracts/${id}`);
-    } catch (error) {
-      console.error('Delete contract error:', error);
-      throw error;
-    }
+    throw new Error('Operação de exclusão de contrato não disponível na API atual');
   }
 }
 
