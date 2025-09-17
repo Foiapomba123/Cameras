@@ -4,7 +4,11 @@ import { tokenStorage } from './tokenStorage';
 import { API_ENDPOINTS } from '../config/api';
 
 export interface LoginRequest {
+<<<<<<< HEAD
   email: string;
+=======
+  usuario: string;
+>>>>>>> 1f6c1fefdd6d7a27f7d5b2245c627f19bb5acb22
   senha: string;
 }
 
@@ -17,11 +21,22 @@ export interface LoginResponse {
 
 export class AuthService {
   // Login do usuário
+<<<<<<< HEAD
   async login(email: string, senha: string, contratoId: string): Promise<LoginResponse> {
     try {
       const response = await apiService.post<LoginResponse>(
         API_ENDPOINTS.AUTH.LOGIN(contratoId), 
         { email, senha }
+=======
+  async login(usuario: string, senha: string, contratoId: string): Promise<LoginResponse> {
+    try {
+      const response = await apiService.post<LoginResponse>(
+        API_ENDPOINTS.AUTH.LOGIN(contratoId), 
+        {
+          usuario,
+          senha,
+        }
+>>>>>>> 1f6c1fefdd6d7a27f7d5b2245c627f19bb5acb22
       );
       
       // Armazenar tokens de forma segura
