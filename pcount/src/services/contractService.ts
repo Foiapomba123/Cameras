@@ -1,6 +1,6 @@
 import { Contract } from '../types';
 import { apiService } from './api';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS_COMPAT as API_ENDPOINTS } from '../config/api';
 
 export interface ContratoDto {
   id: string;

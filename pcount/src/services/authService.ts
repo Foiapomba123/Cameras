@@ -1,7 +1,7 @@
 import { User } from '../types';
 import { apiService } from './api';
 import { tokenStorage } from './tokenStorage';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS_COMPAT as API_ENDPOINTS } from '../config/api';
 
 export interface LoginRequest {
   email: string;

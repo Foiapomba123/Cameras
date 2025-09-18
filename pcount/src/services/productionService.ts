@@ -1,6 +1,6 @@
 import { Production, ProductionStats } from '../types';
 import { apiService } from './api';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS_COMPAT as API_ENDPOINTS } from '../config/api';
 
 export interface ProductionFilters {
   lineId?: string;
@@ -209,9 +209,17 @@ export class ProductionService {
     endDate?: string;
   }): Promise<ProductionStats> {
     try {
+      // Mapear filtros para o DTO esperado pela API
+      const searchDto = {
+        de: filters?.startDate,
+        ate: filters?.endDate,
+        circuitoIds: filters?.lineId ? [filters.lineId] : undefined,
+      };
+
       // A API PCount tem endpoint de Dashboard que pode fornecer estatísticas
-      const response = await apiService.get<DashboardResponseDto>(
-        API_ENDPOINTS.DASHBOARD(contratoId)
+      const response = await apiService.post<DashboardResponseDto>(
+        API_ENDPOINTS.DASHBOARD(contratoId),
+        searchDto
       );
       
       // Mapear resposta do dashboard para ProductionStats

@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { AuthContextType, User, Contract } from '../types';
 import { authService } from '../services/authService';
 import { contractService } from '../services/contractService';
+import { contractManager } from '../services/api';
 import { users } from '../data/users'; // Fallback para desenvolvimento
 import { contracts as mockContracts } from '../data/contracts'; // Fallback para desenvolvimento
 
@@ -121,6 +122,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const selectContract = (contract: Contract) => {
     setSelectedContract(contract);
+    // Atualizar o contrato ativo no gerenciador de contratos para usar nas requisições API
+    contractManager.setActiveContractId(contract.id);
     setError(null);
   };
 
@@ -133,6 +136,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setCurrentUser(null);
       setSelectedContract(null);
+      // Limpar o contrato ativo no logout
+      contractManager.setActiveContractId(null);
       setIsAuthenticated(false);
       setContracts([]);
       setLoading(false);

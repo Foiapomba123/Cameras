@@ -1,19 +1,58 @@
 import { API_CONFIG } from '../config/api';
 import { tokenStorage } from './tokenStorage';
 
+// Interface para gerenciar o contrato ativo
+interface ContractManager {
+  getActiveContractId(): string | null;
+  setActiveContractId(contractId: string | null): void;
+}
+
+// Singleton para gerenciar o contrato ativo
+class ContractManagerImpl implements ContractManager {
+  private activeContractId: string | null = null;
+
+  getActiveContractId(): string | null {
+    return this.activeContractId;
+  }
+
+  setActiveContractId(contractId: string | null): void {
+    this.activeContractId = contractId;
+  }
+}
+
+export const contractManager = new ContractManagerImpl();
+
 // API Base Service
 export class ApiService {
-  private baseURL: string;
+  private baseURLV1: string;
+  private baseURLV2: string;
   
   constructor() {
-    this.baseURL = API_CONFIG.BASE_URL;
+    this.baseURLV1 = API_CONFIG.BASE_URL_V1;
+    this.baseURLV2 = API_CONFIG.BASE_URL_V2;
+  }
+
+  /**
+   * Determina qual versão da API usar baseada no endpoint
+   * V2: Login e Contratos (/Account/*, /Contrato/*)
+   * V1: Todos os outros endpoints
+   */
+  private getBaseURL(endpoint: string): string {
+    // Endpoints que devem usar V2
+    if (endpoint.startsWith('/Account/') || endpoint.startsWith('/Contrato/')) {
+      return this.baseURLV2;
+    }
+    
+    // Todos os outros endpoints usam V1
+    return this.baseURLV1;
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    const baseURL = this.getBaseURL(endpoint);
+    const url = `${baseURL}${endpoint}`;
     
     // Recupera token para autenticação
     const token = await tokenStorage.getToken();
@@ -22,13 +61,15 @@ export class ApiService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
     
+    const activeContractId = contractManager.getActiveContractId();
     const config: RequestInit = {
       ...options,
       signal: controller.signal,
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
-        'equipamentoId': 'replit-web-client', // Header obrigatório para a API
+        // Usar o ID do contrato ativo como equipamentoId, ou fallback para replit-web-client
+        'equipamentoId': activeContractId || 'replit-web-client',
         ...options.headers,
       },
     };
@@ -81,10 +122,10 @@ export class ApiService {
       const refreshToken = await tokenStorage.getRefreshToken();
       if (!refreshToken) return false;
 
-      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+      const response = await fetch(`${this.baseURLV2}/Account/Refresh`, {
         method: 'POST',
         headers: API_CONFIG.DEFAULT_HEADERS,
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
       if (!response.ok) return false;
