@@ -54,21 +54,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Verificar se um contrato foi selecionado
-      if (!selectedContract) {
-        setError('Por favor, selecione um contrato antes de fazer login');
-        return false;
-      }
+      // Tenta autenticar via API V2 (não precisa de contrato selecionado)
+      const response = await authService.login(email, password);
       
-      // Tenta autenticar via API com o contratoId selecionado
-      const response = await authService.login(email, password, selectedContract.id);
-      
-      if (response.sucesso) {
-        // Criar usuário baseado na resposta ou usar dados padrão
-        const user: User = response.usuario || {
-          id: '1',
-          name: email,
-          email: email,
+      if (response.access_token) {
+        // V2 API retorna contratos disponíveis após login
+        if (response.contratos && response.contratos.length > 0) {
+          // Converte contratos da API V2 para formato interno
+          const apiContracts = response.contratos.map(c => ({
+            id: c.contratoId,
+            name: c.contratoNomeFantasia || c.contratoRazaoSocial || 'Contrato',
+            company: c.contratoRazaoSocial || 'Empresa'
+          }));
+          setContracts(apiContracts);
+        }
+        
+        // Criar usuário baseado na resposta da API V2
+        const firstContract = response.contratos?.[0];
+        const user: User = {
+          id: firstContract?.usuarioId || '1',
+          name: firstContract?.usuarioNome || email,
+          email: firstContract?.usuarioEmail || email,
           password: '',
           role: 'admin'
         };
@@ -77,10 +83,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         return true;
       } else {
-        setError(response.mensagem || 'Credenciais inválidas');
+        setError('Credenciais inválidas');
         return false;
       }
-    } catch (err) {
+    } catch (err: any) {
       // Fallback para desenvolvimento APENAS se habilitado
       const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true' && __DEV__;
       
@@ -92,11 +98,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
+          // Usar contratos mock em caso de fallback
+          setContracts(mockContracts);
           return true;
         }
       }
       
-      setError(mockFallbackEnabled ? 'Credenciais inválidas' : 'Erro de conexão. Tente novamente.');
+      // Tratar erros específicos da API V2
+      let errorMessage = 'Erro de conexão. Tente novamente.';
+      if (err?.message?.includes('401') || err?.response?.status === 401) {
+        errorMessage = 'Credenciais inválidas';
+      } else if (mockFallbackEnabled) {
+        errorMessage = 'Credenciais inválidas';
+      }
+      
+      setError(errorMessage);
       return false;
     } finally {
       setLoading(false);
@@ -128,12 +144,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
-  // Carrega contratos na inicialização (não requer autenticação)
-  useEffect(() => {
-    if (contracts.length === 0) {
-      loadContracts();
-    }
-  }, []);
+  // V2 API: Contratos são carregados após login, não na inicialização
+  // useEffect(() => {
+  //   if (contracts.length === 0) {
+  //     loadContracts();
+  //   }
+  // }, []);
 
   const value: AuthContextType = {
     isAuthenticated,

@@ -4,48 +4,47 @@ import { tokenStorage } from './tokenStorage';
 import { API_ENDPOINTS } from '../config/api';
 
 export interface LoginRequest {
-<<<<<<< HEAD
   email: string;
-=======
-  usuario: string;
->>>>>>> 1f6c1fefdd6d7a27f7d5b2245c627f19bb5acb22
   senha: string;
 }
 
 export interface LoginResponse {
-  sucesso: boolean;
-  token?: string;
-  mensagem?: string;
-  usuario?: User;
+  access_token?: string;
+  token_type?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  contratos?: Array<{
+    contratoId: string;
+    usuarioId: string;
+    contratoRazaoSocial?: string;
+    contratoNomeFantasia?: string;
+    usuarioEmail?: string;
+    usuarioNome?: string;
+    usuarioCargo?: string;
+    urlImage?: string;
+    usuarioGrupo: number;
+    isRomaneio: boolean;
+  }>;
 }
 
 export class AuthService {
   // Login do usuário
-<<<<<<< HEAD
-  async login(email: string, senha: string, contratoId: string): Promise<LoginResponse> {
+  async login(email: string, senha: string): Promise<LoginResponse> {
     try {
       const response = await apiService.post<LoginResponse>(
-        API_ENDPOINTS.AUTH.LOGIN(contratoId), 
-        { email, senha }
-=======
-  async login(usuario: string, senha: string, contratoId: string): Promise<LoginResponse> {
-    try {
-      const response = await apiService.post<LoginResponse>(
-        API_ENDPOINTS.AUTH.LOGIN(contratoId), 
+        API_ENDPOINTS.AUTH.LOGIN,
         {
-          usuario,
+          email,
           senha,
         }
->>>>>>> 1f6c1fefdd6d7a27f7d5b2245c627f19bb5acb22
       );
       
       // Armazenar tokens de forma segura
-      if (response.sucesso && response.token) {
-        await tokenStorage.setToken(response.token);
-        // A API PCount pode não retornar refresh token, mas vamos preparar para caso tenha
-        // if (response.refreshToken) {
-        //   await tokenStorage.setRefreshToken(response.refreshToken);
-        // }
+      if (response.access_token) {
+        await tokenStorage.setToken(response.access_token);
+        if (response.refresh_token) {
+          await tokenStorage.setRefreshToken(response.refresh_token);
+        }
       }
       
       return response;
@@ -68,18 +67,18 @@ export class AuthService {
   }
 
   // Renovar token de autenticação
-  async refreshToken(contratoId: string): Promise<boolean> {
+  async refreshToken(): Promise<boolean> {
     try {
       const refreshToken = await tokenStorage.getRefreshToken();
       if (!refreshToken) return false;
 
       const response = await apiService.post<LoginResponse>(
-        API_ENDPOINTS.AUTH.REFRESH(contratoId),
-        { refreshToken }
+        API_ENDPOINTS.AUTH.REFRESH,
+        { refresh_token: refreshToken }
       );
 
-      if (response.sucesso && response.token) {
-        await tokenStorage.setToken(response.token);
+      if (response.access_token) {
+        await tokenStorage.setToken(response.access_token);
         return true;
       }
 

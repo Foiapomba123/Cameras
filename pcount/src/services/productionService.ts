@@ -210,13 +210,8 @@ export class ProductionService {
   }): Promise<ProductionStats> {
     try {
       // A API PCount tem endpoint de Dashboard que pode fornecer estatísticas
-      const response = await apiService.post<DashboardResponseDto>(
-        API_ENDPOINTS.DASHBOARD(contratoId),
-        {
-          dataInicio: filters?.startDate,
-          dataFim: filters?.endDate,
-          circuitoId: filters?.lineId,
-        }
+      const response = await apiService.get<DashboardResponseDto>(
+        API_ENDPOINTS.DASHBOARD(contratoId)
       );
       
       // Mapear resposta do dashboard para ProductionStats

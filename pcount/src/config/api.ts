@@ -1,7 +1,7 @@
 // Configurações da API
 export const API_CONFIG = {
   // URL base da API PCount
-  BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'https://pcountapi.homologa.click/api/v1',
+  BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'https://pcountapi.homologa.click/api/v2',
   
   // Timeout para requests (em ms)
   TIMEOUT: 10000,
@@ -21,8 +21,8 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Autenticação
   AUTH: {
-    LOGIN: (contratoId: string) => `/Account/${contratoId}/Login`,
-    REFRESH: (contratoId: string) => `/Account/${contratoId}/Refresh`,
+    LOGIN: '/Account/Login',
+    REFRESH: '/Account/Refresh',
     REGISTER_DEVICE: '/Account/RegisterDevice',
   },
   
@@ -30,7 +30,7 @@ export const API_ENDPOINTS = {
   CONTRACTS: '/Contrato/Get',
   
   // Circuitos (Linhas de produção)
-  CIRCUITOS: (contratoId: string) => `/Circuito/${contratoId}/Get`,
+  CIRCUITOS: (contratoId: string) => `/Circuito/GetByContrato/${contratoId}`,
   
   // Dashboard
   DASHBOARD: (contratoId: string) => `/Dashboard/${contratoId}/Get`,
