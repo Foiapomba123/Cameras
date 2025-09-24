@@ -35,7 +35,6 @@ export class ApiService {
   /**
    * Determina qual versão da API usar baseada no endpoint
    * V2: TODOS os endpoints (conforme documentação Swagger)
-   * V1: Não existe mais
    */
   private getBaseURL(endpoint: string): string {
     // Todos os endpoints usam V2 conforme documentação Swagger
@@ -76,8 +75,8 @@ export class ApiService {
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
-        // Usar o ID do contrato ativo como EquipamentoId, ou fallback para replit-web-client
-        'EquipamentoId': activeContractId || 'replit-web-client',
+        // Usar o ID do contrato ativo como EquipamentoId, ou fallback 
+        'EquipamentoId': activeContractId || '00000000-0000-0000-0000-000000000000',
         ...options.headers,
       },
     };
