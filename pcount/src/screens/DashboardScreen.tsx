@@ -711,7 +711,7 @@ export const DashboardScreen: React.FC = () => {
           color: theme.colors.text, 
           marginBottom: 16,
           textAlign: 'center'
-        }}>Dashboard - {selectedLineId ? productionLines?.find(l => l.id === selectedLineId)?.name : 'Todo(s)'}</Text>
+        }}>Dashboard {selectedLineId ? productionLines?.find(l => l.id === selectedLineId)?.name : ''}</Text>
         
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
           <Card style={{ flex: 1, marginRight: 8 }}>

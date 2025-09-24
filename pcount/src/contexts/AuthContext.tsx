@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Tenta autenticar via API V2 (não precisa de contrato selecionado)
+      // Tenta autenticar via API V2 
       const response = await authService.login(email, password);
       
       if (response.access_token) {
