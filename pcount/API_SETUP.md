@@ -2,7 +2,6 @@
 
 ## Visão Geral
 
-O PCOUNT agora está preparado para trabalhar com APIs externas. A aplicação funciona em modo **híbrido**:
 
 - 🔌 **Com API**: Usa dados reais do backend quando disponível
 - 📱 **Sem API**: Usa dados mock automaticamente como fallback

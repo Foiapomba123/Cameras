@@ -76,8 +76,8 @@ export class ApiService {
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
-        // Usar o ID do contrato ativo como EquipamentoId, ou fallback para replit-web-client
-        'EquipamentoId': activeContractId || 'replit-web-client',
+        // Usar o ID do contrato ativo como EquipamentoId
+        'EquipamentoId': activeContractId || '',
         ...options.headers,
       },
     };

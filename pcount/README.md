@@ -31,11 +31,6 @@ npm run web
 npm run build:web
 ```
 
-## Credenciais Padrão
-
-- **Usuário**: Admin
-- **Senha**: Admin
-
 ## Estrutura do Projeto
 
 - `src/` - Código fonte da aplicação
@@ -43,6 +38,3 @@ npm run build:web
 - `docs/` - Documentação específica do ambiente de desenvolvimento
 
 ---
-
-*Esta é uma aplicação de demonstração com dados mock para fins de teste e desenvolvimento.*
-*No aguardo da API*
