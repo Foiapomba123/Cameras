@@ -77,7 +77,7 @@ export class ApiService {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
         // Usar o ID do contrato ativo como EquipamentoId
-        'EquipamentoId': activeContractId || 'replit-web-client',
+        'EquipamentoId': activeContractId || 'web-client',
         ...options.headers,
       },
     };
