@@ -125,14 +125,8 @@ const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ 
 
 export const DashboardScreen: React.FC = () => {
   const { selectedContract } = useAuth();
-  
-  // Buscar as estatísticas de produção usando o contrato selecionado
-  // Hook fará no-op se contratoId for falsy
-  const { data: productionStats, loading, error } = useProductionStats(
-    selectedContract?.id
-  );
 
-  // Verificar se um contrato foi selecionado
+  // Verificar se um contrato foi selecionado antes de chamar hooks
   if (!selectedContract) {
     return (
       <Container style={{ padding: 16 }}>
@@ -142,6 +136,12 @@ export const DashboardScreen: React.FC = () => {
       </Container>
     );
   }
+
+  // Buscar as estatísticas de produção usando o contrato selecionado
+  // Agora temos certeza de que selectedContract.id existe
+  const { data: productionStats, loading, error } = useProductionStats(
+    selectedContract.id
+  );
 
   // Mostrar loading
   if (loading) {

@@ -61,7 +61,20 @@ export class ApiService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
     
-    const activeContractId = contractManager.getActiveContractId();
+    // Obter contractId do contractManager ou do storage como fallback
+    let activeContractId = contractManager.getActiveContractId();
+    if (!activeContractId) {
+      try {
+        activeContractId = await tokenStorage.getContractId();
+        // Se encontrou no storage, atualizar o contractManager também
+        if (activeContractId) {
+          contractManager.setActiveContractId(activeContractId);
+        }
+      } catch (error) {
+        console.warn('Erro ao recuperar contractId do storage:', error);
+      }
+    }
+
     const config: RequestInit = {
       ...options,
       signal: controller.signal,

@@ -236,6 +236,30 @@ export class ProductionService {
       };
     } catch (error) {
       console.error('Get production stats error:', error);
+      
+      // Fallback com dados mock em caso de erro
+      const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true' || __DEV__;
+      
+      if (mockFallbackEnabled) {
+        console.warn('API de Dashboard não disponível, usando dados mock');
+        return {
+          operationHours: '08:00',
+          productiveHours: '06:45',
+          avgProduction: 125,
+          totalProduced: 850,
+          hourlyProduction: [
+            { hour: '06:00', value: 95 },
+            { hour: '07:00', value: 110 },
+            { hour: '08:00', value: 125 },
+            { hour: '09:00', value: 140 },
+            { hour: '10:00', value: 120 },
+            { hour: '11:00', value: 135 },
+            { hour: '12:00', value: 85 },
+            { hour: '13:00', value: 105 }
+          ],
+        };
+      }
+      
       throw error;
     }
   }

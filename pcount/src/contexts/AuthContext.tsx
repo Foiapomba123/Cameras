@@ -3,6 +3,7 @@ import { AuthContextType, User, Contract } from '../types';
 import { authService } from '../services/authService';
 import { contractService } from '../services/contractService';
 import { contractManager } from '../services/api';
+import { tokenStorage } from '../services/tokenStorage';
 import { users } from '../data/users'; // Fallback para desenvolvimento
 import { contracts as mockContracts } from '../data/contracts'; // Fallback para desenvolvimento
 
@@ -25,7 +26,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Inicialmente true para carregamento da sessão
   const [error, setError] = useState<string | null>(null);
 
   // Carrega contratos da API
@@ -120,19 +121,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const selectContract = (contract: Contract) => {
-    setSelectedContract(contract);
-    // Atualizar o contrato ativo no gerenciador de contratos para usar nas requisições API
-    contractManager.setActiveContractId(contract.id);
-    setError(null);
+  const selectContract = async (contract: Contract) => {
+    try {
+      setSelectedContract(contract);
+      // Atualizar o contrato ativo no gerenciador de contratos para usar nas requisições API
+      contractManager.setActiveContractId(contract.id);
+      
+      // Persistir o contrato selecionado no AsyncStorage
+      await tokenStorage.setContractId(contract.id);
+      await tokenStorage.setContractData(contract);
+      
+      setError(null);
+    } catch (error) {
+      console.error('Erro ao salvar contrato selecionado:', error);
+      setError('Erro ao salvar contrato. Tente novamente.');
+    }
   };
 
   const logout = async () => {
     try {
       setLoading(true);
       await authService.logout();
+      // Limpar todos os dados persistidos (tokens + contrato)
+      await tokenStorage.clearAllData();
     } catch (err) {
       console.warn('Erro no logout da API:', err);
+      // Mesmo se der erro na API, limpar dados locais
+      await tokenStorage.clearAllData();
     } finally {
       setCurrentUser(null);
       setSelectedContract(null);
@@ -149,12 +164,73 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
-  // V2 API: Contratos são carregados após login, não na inicialização
-  // useEffect(() => {
-  //   if (contracts.length === 0) {
-  //     loadContracts();
-  //   }
-  // }, []);
+  // Função para restaurar sessão ao inicializar o app
+  const restoreSession = async () => {
+    try {
+      setLoading(true);
+      
+      // Verificar se há token válido armazenado
+      const hasToken = await tokenStorage.hasToken();
+      if (!hasToken) {
+        setLoading(false);
+        return;
+      }
+
+      // Verificar se há contrato selecionado
+      const storedContractData = await tokenStorage.getContractData();
+      const storedContractId = await tokenStorage.getContractId();
+      
+      if (hasToken && storedContractData && storedContractId) {
+        // Sessão completa: token + contrato selecionado
+        setIsAuthenticated(true);
+        setSelectedContract(storedContractData);
+        contractManager.setActiveContractId(storedContractId);
+        
+        // Tentar validar o token (opcional)
+        try {
+          const user = await authService.validateToken();
+          if (user) {
+            setCurrentUser(user);
+          }
+        } catch (err) {
+          console.warn('Token validation failed, but keeping session:', err);
+          // Manter sessão mesmo se validação falhar
+          setCurrentUser({
+            id: '1',
+            name: 'Usuário',
+            email: 'user@example.com',
+            password: '',
+            role: 'admin'
+          });
+        }
+      } else if (hasToken) {
+        // Apenas token, sem contrato - usuário precisa selecionar contrato
+        setIsAuthenticated(true);
+        try {
+          const user = await authService.validateToken();
+          if (user) {
+            setCurrentUser(user);
+          }
+          // Carregar contratos para seleção
+          await loadContracts();
+        } catch (err) {
+          console.warn('Token inválido, fazendo logout:', err);
+          await logout();
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao restaurar sessão:', error);
+      // Em caso de erro, limpar tudo e forçar novo login
+      await tokenStorage.clearAllData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Restaurar sessão ao inicializar o app
+  useEffect(() => {
+    restoreSession();
+  }, []);
 
   const value: AuthContextType = {
     isAuthenticated,

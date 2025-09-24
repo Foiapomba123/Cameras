@@ -3,6 +3,8 @@ import { Platform } from 'react-native';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
+const CONTRACT_ID_KEY = 'selected_contract_id';
+const CONTRACT_DATA_KEY = 'selected_contract_data';
 
 export class TokenStorage {
   private isSecureStoreAvailable: boolean | null = null;
@@ -129,6 +131,63 @@ export class TokenStorage {
   async hasToken(): Promise<boolean> {
     const token = await this.getToken();
     return token !== null;
+  }
+
+  // Armazenar ID do contrato selecionado
+  async setContractId(contractId: string): Promise<void> {
+    try {
+      await this.setToStorage(CONTRACT_ID_KEY, contractId);
+    } catch (error) {
+      console.error('Erro ao armazenar contract ID:', error);
+    }
+  }
+
+  // Recuperar ID do contrato armazenado
+  async getContractId(): Promise<string | null> {
+    try {
+      return await this.getFromStorage(CONTRACT_ID_KEY);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Armazenar dados completos do contrato selecionado
+  async setContractData(contractData: any): Promise<void> {
+    try {
+      await this.setToStorage(CONTRACT_DATA_KEY, JSON.stringify(contractData));
+    } catch (error) {
+      console.error('Erro ao armazenar dados do contrato:', error);
+    }
+  }
+
+  // Recuperar dados completos do contrato
+  async getContractData(): Promise<any | null> {
+    try {
+      const data = await this.getFromStorage(CONTRACT_DATA_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Remover dados do contrato
+  async clearContractData(): Promise<void> {
+    try {
+      await this.removeFromStorage(CONTRACT_ID_KEY);
+      await this.removeFromStorage(CONTRACT_DATA_KEY);
+    } catch (error) {
+      console.error('Erro ao limpar dados do contrato:', error);
+    }
+  }
+
+  // Limpar todos os dados (tokens + contrato)
+  async clearAllData(): Promise<void> {
+    try {
+      await this.clearTokens();
+      await this.clearContractData();
+    } catch (error) {
+      console.error('Erro ao limpar todos os dados:', error);
+    }
   }
 }
 

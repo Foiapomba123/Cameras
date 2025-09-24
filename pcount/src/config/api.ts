@@ -62,12 +62,12 @@ export const API_ENDPOINTS = {
     PRODUTOS: (contratoId: string) => `/Produto/${contratoId}/Get`,
     FORMACAO_PALETE: (contratoId: string) => `/Produto/${contratoId}/GetFormacaoPalete`,
     
-    // Fila de Produção
-    FILA_PRODUCAO: {
-      INICIAR: (contratoId: string) => `/FilaProducao/${contratoId}/Iniciar`,
-      ADICIONAR: (contratoId: string) => `/FilaProducao/${contratoId}/Adicionar`,
-      ATUALIZAR: (contratoId: string) => `/FilaProducao/${contratoId}/Atualizar`,
-    },
+    // Fila de Produção - DESABILITADO POR SOLICITAÇÃO
+    // FILA_PRODUCAO: {
+    //   INICIAR: (contratoId: string) => `/FilaProducao/${contratoId}/Iniciar`,
+    //   ADICIONAR: (contratoId: string) => `/FilaProducao/${contratoId}/Adicionar`,
+    //   ATUALIZAR: (contratoId: string) => `/FilaProducao/${contratoId}/Atualizar`,
+    // },
   },
 };
 
@@ -85,5 +85,5 @@ export const API_ENDPOINTS_COMPAT = {
   PRODUCTIONS: API_ENDPOINTS.V1.PRODUCTIONS,
   PRODUTOS: API_ENDPOINTS.V1.PRODUTOS,
   FORMACAO_PALETE: API_ENDPOINTS.V1.FORMACAO_PALETE,
-  FILA_PRODUCAO: API_ENDPOINTS.V1.FILA_PRODUCAO,
+  // FILA_PRODUCAO: API_ENDPOINTS.V1.FILA_PRODUCAO, // DESABILITADO POR SOLICITAÇÃO
 };
