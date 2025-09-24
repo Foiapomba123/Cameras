@@ -48,3 +48,4 @@ docs/replit-assets/
 # VSCode
 .vscode/
 .replit
+pcount/src/services/MyNutrify/
