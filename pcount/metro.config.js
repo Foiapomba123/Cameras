@@ -1,3 +1,11 @@
 const { getDefaultConfig } = require('expo/metro-config');
 
-module.exports = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
+
+// Allow requests from all hosts for Replit proxy compatibility
+config.server = {
+  ...config.server,
+  allowedHosts: 'all',
+};
+
+module.exports = config;

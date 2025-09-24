@@ -68,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             name: c.contratoNomeFantasia || c.contratoRazaoSocial || 'Contrato',
             company: c.contratoRazaoSocial || 'Empresa'
           }));
+          console.log('Contratos carregados da API:', apiContracts);
           setContracts(apiContracts);
         }
         
@@ -101,6 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setCurrentUser(user);
           setIsAuthenticated(true);
           // Usar contratos mock em caso de fallback
+          console.log('Usando contratos mock:', mockContracts);
           setContracts(mockContracts);
           return true;
         }
@@ -123,6 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const selectContract = async (contract: Contract) => {
     try {
+      console.log('Selecionando contrato:', contract);
       setSelectedContract(contract);
       // Atualizar o contrato ativo no gerenciador de contratos para usar nas requisições API
       contractManager.setActiveContractId(contract.id);

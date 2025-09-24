@@ -209,6 +209,8 @@ export class ProductionService {
     endDate?: string;
   }): Promise<ProductionStats> {
     try {
+      console.log('Chamando API Dashboard com contratoId:', contratoId);
+      
       // Mapear filtros para o DTO esperado pela API
       const searchDto = {
         de: filters?.startDate,
@@ -217,8 +219,11 @@ export class ProductionService {
       };
 
       // A API PCount tem endpoint de Dashboard que pode fornecer estatísticas
+      const endpoint = API_ENDPOINTS.DASHBOARD(contratoId);
+      console.log('Endpoint da API Dashboard:', endpoint);
+      
       const response = await apiService.post<DashboardResponseDto>(
-        API_ENDPOINTS.DASHBOARD(contratoId),
+        endpoint,
         searchDto
       );
       
@@ -234,15 +239,23 @@ export class ProductionService {
           value: item.valor
         })) || [],
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Get production stats error:', error);
+      console.error('Erro detalhado da API Dashboard:', {
+        message: error?.message,
+        status: error?.status,
+        response: error?.response,
+        url: API_ENDPOINTS.DASHBOARD(contratoId)
+      });
       
       // Fallback com dados mock em caso de erro
       const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true' || __DEV__;
       
       if (mockFallbackEnabled) {
-        console.warn('API de Dashboard não disponível, usando dados mock');
-        return {
+        console.warn('API de Dashboard não disponível para contrato', contratoId, ', usando dados mock com filtros:', filters);
+        
+        // Aplicar filtros aos dados mock para simular filtragem real
+        let mockData = {
           operationHours: '08:00',
           productiveHours: '06:45',
           avgProduction: 125,
@@ -258,6 +271,28 @@ export class ProductionService {
             { hour: '13:00', value: 105 }
           ],
         };
+        
+        // Se uma linha específica foi selecionada, ajustar os dados
+        if (filters?.lineId) {
+          mockData.avgProduction = 85; // Simulação de uma linha específica
+          mockData.totalProduced = 680;
+          mockData.hourlyProduction = mockData.hourlyProduction.map(h => ({
+            ...h,
+            value: Math.round(h.value * 0.7) // Simular dados de linha específica
+          }));
+        }
+        
+        // Simular diferenças baseadas no período selecionado
+        const today = new Date().toISOString().split('T')[0];
+        if (filters?.startDate === today && filters?.endDate === today) {
+          // Dados de hoje - mais baixos
+          mockData.totalProduced = Math.round(mockData.totalProduced * 0.3);
+        } else if (filters?.startDate !== today || filters?.endDate !== today) {
+          // Dados de período maior - mais altos
+          mockData.totalProduced = Math.round(mockData.totalProduced * 1.5);
+        }
+        
+        return mockData;
       }
       
       throw error;

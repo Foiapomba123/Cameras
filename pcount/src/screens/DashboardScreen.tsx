@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { Svg, Rect, Text as SvgText, Line, G } from 'react-native-svg';
-import { useProductionStats } from '../hooks/useProductions';
+import { useProductionStats, useProductionLines } from '../hooks/useProductions';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Container,
@@ -13,6 +13,9 @@ import {
   FeaturedCardSubtitle,
   FeaturedCardAccent,
   FeaturedCardIcon,
+  Button,
+  ButtonText,
+  Input,
 } from '../components/StyledComponents';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -123,8 +126,361 @@ const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ 
   );
 };
 
+// Componente do header com logo e logout
+const DashboardHeader: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  return (
+    <View style={{
+      backgroundColor: '#00BFFF',
+      paddingTop: 50,
+      paddingBottom: 16,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }}>
+      <View style={{
+        backgroundColor: '#FFD700',
+        padding: 8,
+        borderRadius: 8,
+        width: 60,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#000' }}>VITON</Text>
+      </View>
+      
+      <Text style={{
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+        flex: 1
+      }}>PCOUNT</Text>
+      
+      <TouchableOpacity
+        onPress={onLogout}
+        style={{
+          backgroundColor: '#4A5568',
+          padding: 8,
+          borderRadius: 8,
+          width: 40,
+          height: 40,
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 18 }}>⏻</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+// Componente do seletor de datas
+const DateSelector: React.FC<{
+  startDate: string;
+  endDate: string;
+  onDateChange: (start: string, end: string) => void;
+}> = ({ startDate, endDate, onDateChange }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState(startDate);
+  const [tempEndDate, setTempEndDate] = useState(endDate);
+  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '--';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  };
+  
+  const handleSave = () => {
+    onDateChange(tempStartDate, tempEndDate);
+    setShowModal(false);
+  };
+  
+  const presetRanges = [
+    { label: 'Hoje', start: new Date().toISOString().split('T')[0], end: new Date().toISOString().split('T')[0] },
+    { label: 'Esta semana', start: getWeekStart(), end: new Date().toISOString().split('T')[0] },
+    { label: 'Este mês', start: getMonthStart(), end: new Date().toISOString().split('T')[0] },
+  ];
+  
+  function getWeekStart() {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek;
+    return new Date(now.setDate(diff)).toISOString().split('T')[0];
+  }
+  
+  function getMonthStart() {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  }
+  
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() => {
+          setTempStartDate(startDate);
+          setTempEndDate(endDate);
+          setShowModal(true);
+        }}
+        style={{
+          backgroundColor: '#2D3748',
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          borderRadius: 20,
+          marginBottom: 8,
+          alignSelf: 'flex-start'
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>
+          De: {formatDate(startDate)} Até: {formatDate(endDate)}
+        </Text>
+      </TouchableOpacity>
+      
+      <Modal visible={showModal} transparent animationType="fade">
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <View style={{
+            backgroundColor: '#2D3748',
+            borderRadius: 12,
+            padding: 20,
+            width: '80%',
+            maxHeight: '70%'
+          }}>
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
+              Selecionar Período
+            </Text>
+            
+            {/* Seleção manual de datas */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ color: '#fff', fontSize: 14, marginBottom: 8 }}>Data Inicial:</Text>
+              <View style={{ 
+                backgroundColor: '#4A5568', 
+                borderRadius: 8, 
+                marginBottom: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 4
+              }}>
+                <Input
+                  value={tempStartDate}
+                  onChangeText={setTempStartDate}
+                  placeholder="yyyy-mm-dd"
+                  placeholderTextColor="#A0A0A0"
+                  style={{ 
+                    color: '#fff', 
+                    backgroundColor: 'transparent',
+                    borderWidth: 0,
+                    margin: 0,
+                    height: 40
+                  }}
+                />
+              </View>
+              
+              <Text style={{ color: '#fff', fontSize: 14, marginBottom: 8 }}>Data Final:</Text>
+              <View style={{ 
+                backgroundColor: '#4A5568', 
+                borderRadius: 8, 
+                marginBottom: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 4
+              }}>
+                <Input
+                  value={tempEndDate}
+                  onChangeText={setTempEndDate}
+                  placeholder="yyyy-mm-dd"
+                  placeholderTextColor="#A0A0A0"
+                  style={{ 
+                    color: '#fff', 
+                    backgroundColor: 'transparent',
+                    borderWidth: 0,
+                    margin: 0,
+                    height: 40
+                  }}
+                />
+              </View>
+            </View>
+            
+            {/* Períodos pré-definidos */}
+            <Text style={{ color: '#fff', fontSize: 14, marginBottom: 8 }}>Períodos rápidos:</Text>
+            {presetRanges.map((range, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setTempStartDate(range.start);
+                  setTempEndDate(range.end);
+                }}
+                style={{
+                  backgroundColor: '#4A5568',
+                  padding: 12,
+                  borderRadius: 8,
+                  marginBottom: 8
+                }}
+              >
+                <Text style={{ color: '#fff', textAlign: 'center' }}>{range.label}</Text>
+              </TouchableOpacity>
+            ))}
+            
+            <View style={{ flexDirection: 'row', marginTop: 16 }}>
+              <TouchableOpacity
+                onPress={() => setShowModal(false)}
+                style={{
+                  backgroundColor: '#E53E3E',
+                  padding: 12,
+                  borderRadius: 8,
+                  flex: 1,
+                  marginRight: 8
+                }}
+              >
+                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Cancelar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={handleSave}
+                style={{
+                  backgroundColor: '#00BFFF',
+                  padding: 12,
+                  borderRadius: 8,
+                  flex: 1,
+                  marginLeft: 8
+                }}
+              >
+                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Aplicar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+};
+
+// Componente do seletor de produção
+const ProductionSelector: React.FC<{
+  selectedLineId: string | null;
+  onLineChange: (lineId: string | null) => void;
+  lines: any[];
+}> = ({ selectedLineId, onLineChange, lines }) => {
+  const [showModal, setShowModal] = useState(false);
+  
+  const selectedLine = lines.find(line => line.id === selectedLineId);
+  
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() => setShowModal(true)}
+        style={{
+          backgroundColor: '#4A5568',
+          padding: 12,
+          borderRadius: 8,
+          marginBottom: 16
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
+          {selectedLineId ? selectedLine?.name || 'Linha específica' : 'Todo(s)'}
+        </Text>
+      </TouchableOpacity>
+      
+      <Modal visible={showModal} transparent animationType="fade">
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <View style={{
+            backgroundColor: '#4A5568',
+            borderRadius: 12,
+            padding: 20,
+            width: '80%',
+            maxHeight: '70%'
+          }}>
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
+              Todo(s)
+            </Text>
+            
+            <TouchableOpacity
+              onPress={() => {
+                onLineChange(null);
+                setShowModal(false);
+              }}
+              style={{
+                backgroundColor: selectedLineId === null ? '#00BFFF' : '#2D3748',
+                padding: 12,
+                borderRadius: 8,
+                marginBottom: 8
+              }}
+            >
+              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Todo(s)</Text>
+            </TouchableOpacity>
+            
+            <ScrollView style={{ maxHeight: 200 }}>
+              {lines.map((line) => (
+                <TouchableOpacity
+                  key={line.id}
+                  onPress={() => {
+                    onLineChange(line.id);
+                    setShowModal(false);
+                  }}
+                  style={{
+                    backgroundColor: selectedLineId === line.id ? '#00BFFF' : '#2D3748',
+                    padding: 12,
+                    borderRadius: 8,
+                    marginBottom: 8
+                  }}
+                >
+                  <Text style={{ color: '#fff', textAlign: 'center' }}>{line.name} {line.code}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <TouchableOpacity
+              onPress={() => setShowModal(false)}
+              style={{
+                backgroundColor: '#E53E3E',
+                padding: 12,
+                borderRadius: 8,
+                marginTop: 16
+              }}
+            >
+              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+};
+
 export const DashboardScreen: React.FC = () => {
-  const { selectedContract } = useAuth();
+  const { selectedContract, logout } = useAuth();
+  
+  // Estados para filtros
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  
+  // Buscar linhas de produção
+  const { data: productionLines } = useProductionLines(selectedContract?.id || '');
+  
+  // Construir filtros para a API
+  const filters = useMemo(() => ({
+    startDate,
+    endDate,
+    lineId: selectedLineId || undefined,
+  }), [startDate, endDate, selectedLineId]);
+  
+  const handleDateChange = (start: string, end: string) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+  
+  const handleLogout = async () => {
+    await logout();
+  };
 
   // Verificar se um contrato foi selecionado antes de chamar hooks
   if (!selectedContract) {
@@ -137,10 +493,10 @@ export const DashboardScreen: React.FC = () => {
     );
   }
 
-  // Buscar as estatísticas de produção usando o contrato selecionado
-  // Agora temos certeza de que selectedContract.id existe
+  // Buscar as estatísticas de produção usando o contrato selecionado e filtros
   const { data: productionStats, loading, error } = useProductionStats(
-    selectedContract.id
+    selectedContract.id,
+    filters
   );
 
   // Mostrar loading
@@ -176,8 +532,28 @@ export const DashboardScreen: React.FC = () => {
 
   return (
     <Container>
+      <DashboardHeader onLogout={handleLogout} />
+      
       <ScrollView style={{ padding: 16 }}>
-        <Title>Dashboard</Title>
+        <DateSelector
+          startDate={startDate}
+          endDate={endDate}
+          onDateChange={handleDateChange}
+        />
+        
+        <ProductionSelector
+          selectedLineId={selectedLineId}
+          onLineChange={setSelectedLineId}
+          lines={productionLines || []}
+        />
+        
+        <Text style={{ 
+          fontSize: 18, 
+          fontWeight: 'bold', 
+          color: theme.colors.text, 
+          marginBottom: 16,
+          textAlign: 'center'
+        }}>Dashboard - {selectedLineId ? productionLines?.find(l => l.id === selectedLineId)?.name : 'Todo(s)'}</Text>
         
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
           <Card style={{ flex: 1, marginRight: 8 }}>
