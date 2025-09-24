@@ -34,17 +34,12 @@ export class ApiService {
 
   /**
    * Determina qual versão da API usar baseada no endpoint
-   * V2: Login e Contratos (/Account/*, /Contrato/*)
-   * V1: Todos os outros endpoints
+   * V2: TODOS os endpoints (conforme documentação Swagger)
+   * V1: Não existe mais
    */
   private getBaseURL(endpoint: string): string {
-    // Endpoints que devem usar V2
-    if (endpoint.startsWith('/Account/') || endpoint.startsWith('/Contrato/')) {
-      return this.baseURLV2;
-    }
-    
-    // Todos os outros endpoints usam V1
-    return this.baseURLV1;
+    // Todos os endpoints usam V2 conforme documentação Swagger
+    return this.baseURLV2;
   }
 
   private async request<T>(
@@ -81,8 +76,8 @@ export class ApiService {
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
-        // Usar o ID do contrato ativo como equipamentoId, ou fallback para replit-web-client
-        'equipamentoId': activeContractId || 'replit-web-client',
+        // Usar o ID do contrato ativo como EquipamentoId, ou fallback para replit-web-client
+        'EquipamentoId': activeContractId || 'replit-web-client',
         ...options.headers,
       },
     };

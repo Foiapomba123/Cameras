@@ -4,8 +4,8 @@ import { tokenStorage } from './tokenStorage';
 import { API_ENDPOINTS_COMPAT as API_ENDPOINTS } from '../config/api';
 
 export interface LoginRequest {
-  email: string;
-  senha: string;
+  Email: string;
+  Senha: string;
 }
 
 export interface LoginResponse {
@@ -34,8 +34,8 @@ export class AuthService {
       const response = await apiService.post<LoginResponse>(
         API_ENDPOINTS.AUTH.LOGIN,
         {
-          email,
-          senha,
+          Email: email,
+          Senha: senha,
         }
       );
       

@@ -23,9 +23,9 @@ export const API_CONFIG = {
   },
 };
 
-// Endpoints da API PCount
+// Endpoints da API PCount - TODOS NA V2 conforme documentação Swagger
 export const API_ENDPOINTS = {
-  // API V2 - Autenticação e Contratos APENAS
+  // API V2 - TODOS os endpoints (conforme documentação Swagger)
   V2: {
     // Autenticação
     AUTH: {
@@ -36,17 +36,14 @@ export const API_ENDPOINTS = {
     
     // Contratos
     CONTRACTS: '/Contrato/Get',
-  },
-  
-  // API V1 - Produção, Circuitos e demais funcionalidades
-  V1: {
-    // Circuitos (Linhas de produção)
+    
+    // Circuitos (Linhas de produção) - MOVIDO PARA V2
     CIRCUITOS: (contratoId: string) => `/Circuito/GetByContrato/${contratoId}`,
     
-    // Dashboard
+    // Dashboard - MOVIDO PARA V2
     DASHBOARD: (contratoId: string) => `/Dashboard/${contratoId}/Get`,
     
-    // Produções
+    // Produções - MOVIDAS PARA V2
     PRODUCTIONS: {
       GET: (contratoId: string, id: string) => `/Producao/${contratoId}/Get/${id}`,
       GET_BY_CIRCUITO: (contratoId: string, circuitoId: string) => `/Producao/${contratoId}/GetByCircuito/${circuitoId}`,
@@ -58,20 +55,16 @@ export const API_ENDPOINTS = {
       APONTAR: (contratoId: string) => `/Producao/${contratoId}/ApontarProducao`,
     },
     
-    // Produtos
+    // Produtos - MOVIDOS PARA V2
     PRODUTOS: (contratoId: string) => `/Produto/${contratoId}/Get`,
     FORMACAO_PALETE: (contratoId: string) => `/Produto/${contratoId}/GetFormacaoPalete`,
-    
-    // Fila de Produção - DESABILITADO POR SOLICITAÇÃO
-    // FILA_PRODUCAO: {
-    //   INICIAR: (contratoId: string) => `/FilaProducao/${contratoId}/Iniciar`,
-    //   ADICIONAR: (contratoId: string) => `/FilaProducao/${contratoId}/Adicionar`,
-    //   ATUALIZAR: (contratoId: string) => `/FilaProducao/${contratoId}/Atualizar`,
-    // },
   },
+  
+  // API V1 - NÃO EXISTE MAIS (mantido para compatibilidade - será removido)
+  V1: {},
 };
 
-// Mantém compatibilidade com código existente (mapeamento dos endpoints V2 e V1)
+// Mantém compatibilidade com código existente - TODOS os endpoints agora na V2
 export const API_ENDPOINTS_COMPAT = {
   // Autenticação (V2)
   AUTH: API_ENDPOINTS.V2.AUTH,
@@ -79,11 +72,10 @@ export const API_ENDPOINTS_COMPAT = {
   // Contratos (V2)
   CONTRACTS: API_ENDPOINTS.V2.CONTRACTS,
   
-  // Todos os outros endpoints (V1)
-  CIRCUITOS: API_ENDPOINTS.V1.CIRCUITOS,
-  DASHBOARD: API_ENDPOINTS.V1.DASHBOARD,
-  PRODUCTIONS: API_ENDPOINTS.V1.PRODUCTIONS,
-  PRODUTOS: API_ENDPOINTS.V1.PRODUTOS,
-  FORMACAO_PALETE: API_ENDPOINTS.V1.FORMACAO_PALETE,
-  // FILA_PRODUCAO: API_ENDPOINTS.V1.FILA_PRODUCAO, // DESABILITADO POR SOLICITAÇÃO
+  // Todos os outros endpoints agora também na V2
+  CIRCUITOS: API_ENDPOINTS.V2.CIRCUITOS,
+  DASHBOARD: API_ENDPOINTS.V2.DASHBOARD,
+  PRODUCTIONS: API_ENDPOINTS.V2.PRODUCTIONS,
+  PRODUTOS: API_ENDPOINTS.V2.PRODUTOS,
+  FORMACAO_PALETE: API_ENDPOINTS.V2.FORMACAO_PALETE,
 };

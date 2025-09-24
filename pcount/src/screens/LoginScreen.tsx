@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Alert, Text } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -18,14 +18,7 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, error } = useAuth();
-
-  // Reage às mudanças de erro para mostrar mensagens detalhadas
-  useEffect(() => {
-    if (error) {
-      Alert.alert('Erro de Login', error);
-    }
-  }, [error]);
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -34,7 +27,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
 
     const success = await login(email, password);
-    // Erro é exibido automaticamente via useEffect quando error muda
+    if (!success) {
+      Alert.alert('Erro', 'Credenciais inválidas');
+    }
     // Removido navigation.navigate - deixa o AppNavigator controlar automaticamente
   };
 
@@ -68,8 +63,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           textAlign: 'center',
           marginTop: theme.spacing.md
         }}>
-          Conectando à API real PCount{'\n'}
-          Use suas credenciais de acesso válidas
+          
         </Text>
       </CenteredContainer>
     </Container>

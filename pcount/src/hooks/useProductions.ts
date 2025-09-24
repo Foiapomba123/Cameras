@@ -3,6 +3,7 @@ import { Production, ProductionLine, ProductionStats } from '../types';
 import { productionService } from '../services/productionService';
 import { productionLineService } from '../services/productionLineService';
 import { useApi } from './useApi';
+import { useProductionLinesWithFallback, useProductionsWithFallback, useProductionStatsWithFallback } from './useMockFallback';
 
 // Hook para buscar produções
 export function useProductions(contratoId: string, filters?: {
@@ -11,18 +12,12 @@ export function useProductions(contratoId: string, filters?: {
   startDate?: string;
   endDate?: string;
 }) {
-  return useApi(
-    () => productionService.getProductions(contratoId, filters),
-    [contratoId, filters?.lineId, filters?.status, filters?.startDate, filters?.endDate]
-  );
+  return useProductionsWithFallback(contratoId, filters);
 }
 
 // Hook para buscar linhas de produção
 export function useProductionLines(contractId: string) {
-  return useApi(
-    () => productionLineService.getProductionLines(contractId),
-    [contractId]
-  );
+  return useProductionLinesWithFallback(contractId);
 }
 
 // Hook para buscar estatísticas de produção
@@ -31,10 +26,7 @@ export function useProductionStats(contratoId: string, filters?: {
   startDate?: string;
   endDate?: string;
 }) {
-  return useApi(
-    () => productionService.getProductionStats(contratoId, filters),
-    [contratoId, filters?.lineId, filters?.startDate, filters?.endDate]
-  );
+  return useProductionStatsWithFallback(contratoId, filters);
 }
 
 // Hook para operações manuais de produção

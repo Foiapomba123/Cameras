@@ -106,20 +106,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
       
-      // Tratar erros específicos da API V2 com detecção robusta de status
-      const status = err?.response?.status;
-      let errorMessage = 'Erro de conexão com a API PCount. Verifique sua conexão.';
-      
-      if (status === 401 || err?.message?.includes('401')) {
-        errorMessage = 'Credenciais inválidas. Use suas credenciais reais da API PCount (não Admin/Admin).';
-      } else if (status === 400) {
-        errorMessage = 'Formato de requisição inválido. Verifique os dados enviados.';
-      } else if (status === 404) {
-        errorMessage = 'Endpoint não encontrado. Verifique a configuração da API.';
-      } else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
-        errorMessage = 'Tempo esgotado. Verifique sua conexão e tente novamente.';
-      } else if (!err?.response && err?.request) {
-        errorMessage = 'Erro de rede. Verifique sua conexão com a internet.';
+      // Tratar erros específicos da API V2
+      let errorMessage = 'Erro de conexão. Tente novamente.';
+      if (err?.message?.includes('401') || err?.response?.status === 401) {
+        errorMessage = 'Credenciais inválidas';
       } else if (mockFallbackEnabled) {
         errorMessage = 'Credenciais inválidas';
       }
