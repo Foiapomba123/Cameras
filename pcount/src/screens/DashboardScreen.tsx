@@ -188,39 +188,174 @@ const DateSelector: React.FC<{
   
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '--';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    
+    // Parse manual da data ISO para evitar problemas de timezone
+    const [year, month, day] = dateStr.split('-').map(Number);
+    if (!year || !month || !day) return '--';
+    
+    // Cria data local sem problemas de timezone
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('pt-BR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  };
+  
+  // Função para obter data e hora atual do Brasil
+  const getBrazilDateTime = () => {
+    const now = new Date();
+    return now.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+  
+  // Função para obter data atual do Brasil no formato YYYY-MM-DD
+  const getBrazilDate = () => {
+    const now = new Date();
+    const brazilTime = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(now);
+    return brazilTime; // Retorna no formato YYYY-MM-DD
+  };
+  
+  // Função para obter data no formato YYYY-MM-DD (fuso horário do Brasil)
+  const getLocalDateString = (date: Date = new Date()) => {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(date);
+  };
+  
+  // Função para converter YYYY-MM-DD para DD/MM/YYYY
+  const formatDateForInput = (dateStr: string) => {
+    if (!dateStr) return '';
+    
+    // Verifica se já está no formato DD/MM/YYYY
+    if (dateStr.includes('/')) {
+      return dateStr;
+    }
+    
+    // Valida formato YYYY-MM-DD
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!isoDateRegex.test(dateStr)) {
+      return dateStr; // Retorna como está se não for válido
+    }
+    
+    const [year, month, day] = dateStr.split('-');
+    if (year && month && day) {
+      return `${day}/${month}/${year}`;
+    }
+    return dateStr;
+  };
+  
+  // Função para converter DD/MM/YYYY para YYYY-MM-DD
+  const parseInputDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    
+    // Se já estiver no formato YYYY-MM-DD válido, retorna como está
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (isoDateRegex.test(dateStr)) {
+      return dateStr;
+    }
+    
+    // Se estiver no formato DD/MM/YYYY, converte
+    const brDateRegex = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+    if (brDateRegex.test(dateStr)) {
+      const [day, month, year] = dateStr.split('/');
+      if (day && month && year) {
+        const dayPadded = day.padStart(2, '0');
+        const monthPadded = month.padStart(2, '0');
+        
+        // Valida se a data é válida
+        const testDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (testDate.getFullYear() == parseInt(year) && 
+            testDate.getMonth() == parseInt(month) - 1 && 
+            testDate.getDate() == parseInt(day)) {
+          return `${year}-${monthPadded}-${dayPadded}`;
+        }
+      }
+    }
+    
+    // Se não conseguir converter, retorna vazio para evitar datas inválidas
+    return '';
   };
   
   const handleSave = () => {
-    onDateChange(tempStartDate, tempEndDate);
-    setShowModal(false);
+    // Converte as datas de DD/MM/YYYY para YYYY-MM-DD antes de salvar
+    const startDateConverted = parseInputDate(tempStartDate);
+    const endDateConverted = parseInputDate(tempEndDate);
+    
+    // Só salva se ambas as datas forem válidas
+    if (startDateConverted && endDateConverted) {
+      onDateChange(startDateConverted, endDateConverted);
+      setShowModal(false);
+    } else {
+      // Aqui poderia mostrar uma mensagem de erro, por enquanto só não fecha o modal
+      console.warn('Datas inválidas:', { tempStartDate, tempEndDate });
+    }
   };
   
   const presetRanges = [
-    { label: 'Hoje', start: new Date().toISOString().split('T')[0], end: new Date().toISOString().split('T')[0] },
-    { label: 'Esta semana', start: getWeekStart(), end: new Date().toISOString().split('T')[0] },
-    { label: 'Este mês', start: getMonthStart(), end: new Date().toISOString().split('T')[0] },
+    { label: 'Hoje', start: getBrazilDate(), end: getBrazilDate() },
+    { label: 'Esta semana', start: getWeekStart(), end: getBrazilDate() },
+    { label: 'Este mês', start: getMonthStart(), end: getBrazilDate() },
   ];
   
   function getWeekStart() {
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek;
-    return new Date(now.setDate(diff)).toISOString().split('T')[0];
+    
+    // Obtém a data atual no Brasil
+    const brazilToday = getBrazilDate();
+    const [year, month, day] = brazilToday.split('-').map(Number);
+    
+    // Cria data UTC para o dia atual do Brasil
+    const brazilDate = new Date(Date.UTC(year, month - 1, day));
+    const dayOfWeek = brazilDate.getUTCDay();
+    
+    // Calcula o início da semana (domingo = 0)
+    const daysToSubtract = dayOfWeek;
+    const weekStartUTC = new Date(brazilDate);
+    weekStartUTC.setUTCDate(brazilDate.getUTCDate() - daysToSubtract);
+    
+    // Formata de volta para YYYY-MM-DD
+    const weekStartYear = weekStartUTC.getUTCFullYear();
+    const weekStartMonth = String(weekStartUTC.getUTCMonth() + 1).padStart(2, '0');
+    const weekStartDay = String(weekStartUTC.getUTCDate()).padStart(2, '0');
+    
+    return `${weekStartYear}-${weekStartMonth}-${weekStartDay}`;
   }
   
   function getMonthStart() {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  }
+    // Obtém a data atual no Brasil
+    const brazilToday = getBrazilDate();
+    const [year, month] = brazilToday.split('-').map(Number);
+    
+    // Primeiro dia do mês atual do Brasil
+    const monthStartYear = year;
+    const monthStartMonth = String(month).padStart(2, '0');
+    const monthStartDay = '01';
+    
+    return `${monthStartYear}-${monthStartMonth}-${monthStartDay}`;
+  };;
   
   return (
     <>
       <TouchableOpacity
         onPress={() => {
-          setTempStartDate(startDate);
-          setTempEndDate(endDate);
+          // Converte as datas para DD/MM/YYYY para exibir nos inputs
+          setTempStartDate(formatDateForInput(startDate));
+          setTempEndDate(formatDateForInput(endDate));
           setShowModal(true);
         }}
         style={{
@@ -233,7 +368,7 @@ const DateSelector: React.FC<{
         }}
       >
         <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>
-          De: {formatDate(startDate)} Até: {formatDate(endDate)}
+          De: {formatDate(startDate)} Até: {formatDate(endDate)} | {getBrazilDateTime()}
         </Text>
       </TouchableOpacity>
       
@@ -268,7 +403,7 @@ const DateSelector: React.FC<{
                 <Input
                   value={tempStartDate}
                   onChangeText={setTempStartDate}
-                  placeholder="yyyy-mm-dd"
+                  placeholder="dd/mm/yyyy"
                   placeholderTextColor="#A0A0A0"
                   style={{ 
                     color: '#fff', 
@@ -291,7 +426,7 @@ const DateSelector: React.FC<{
                 <Input
                   value={tempEndDate}
                   onChangeText={setTempEndDate}
-                  placeholder="yyyy-mm-dd"
+                  placeholder="dd/mm/yyyy"
                   placeholderTextColor="#A0A0A0"
                   style={{ 
                     color: '#fff', 
@@ -310,8 +445,9 @@ const DateSelector: React.FC<{
               <TouchableOpacity
                 key={index}
                 onPress={() => {
-                  setTempStartDate(range.start);
-                  setTempEndDate(range.end);
+                  // Converte as datas dos presets para DD/MM/YYYY
+                  setTempStartDate(formatDateForInput(range.start));
+                  setTempEndDate(formatDateForInput(range.end));
                 }}
                 style={{
                   backgroundColor: '#4A5568',
@@ -459,8 +595,19 @@ export const DashboardScreen: React.FC = () => {
   const { selectedContract, logout } = useAuth();
   
   // Estados para filtros
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  // Função para obter data do Brasil (deve estar antes dos useState)
+  const getBrazilDateForInit = () => {
+    const now = new Date();
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(now);
+  };
+  
+  const [startDate, setStartDate] = useState(getBrazilDateForInit());
+  const [endDate, setEndDate] = useState(getBrazilDateForInit());
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
   
   // Buscar linhas de produção

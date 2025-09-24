@@ -32,6 +32,7 @@ const MainTabs = () => {
           tabBarIcon: ({ color, size }) => (
             <Icon name="dashboard" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
       <Tab.Screen 
