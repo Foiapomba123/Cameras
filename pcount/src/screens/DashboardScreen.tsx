@@ -89,6 +89,17 @@ const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ 
                 opacity={0.8}
                 rx={2}
               />
+              {/* Valor da quantidade em cima da barra */}
+              <SvgText
+                x={x + (barWidth * 0.4)}
+                y={y - 8}
+                fontSize="10"
+                fill={theme.colors.text}
+                textAnchor="middle"
+                fontWeight="bold"
+              >
+                {item.value}
+              </SvgText>
               <SvgText
                 x={x + (barWidth * 0.4)}
                 y={padding.top + chartHeight + 15}
@@ -368,7 +379,7 @@ const DateSelector: React.FC<{
         }}
       >
         <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>
-          De: {formatDate(startDate)} Até: {formatDate(endDate)} | {getBrazilDateTime()}
+          De: {formatDate(startDate)} Até: {formatDate(endDate)}
         </Text>
       </TouchableOpacity>
       

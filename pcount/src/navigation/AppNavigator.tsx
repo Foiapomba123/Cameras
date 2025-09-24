@@ -11,6 +11,7 @@ import { DashboardScreen } from '../screens/DashboardScreen';
 import { LinesScreen } from '../screens/LinesScreen';
 import { ProductionScreen } from '../screens/ProductionScreen';
 import { LineDetailScreen } from '../screens/LineDetailScreen';
+import { ProductionDetailScreen } from '../screens/ProductionDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -94,6 +95,13 @@ export const AppNavigator = () => {
               component={LineDetailScreen}
               options={{ 
                 header: () => <CustomHeader title="Produção de linha" showBackButton={true} />
+              }}
+            />
+            <Stack.Screen 
+              name="ProductionDetail" 
+              component={ProductionDetailScreen}
+              options={{ 
+                header: () => <CustomHeader title="Detalhes da Produção" showBackButton={true} />
               }}
             />
           </>

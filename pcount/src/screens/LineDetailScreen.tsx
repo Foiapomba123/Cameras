@@ -22,7 +22,7 @@ export const LineDetailScreen: React.FC<LineDetailScreenProps> = ({ route, navig
   // Buscar produções usando o contrato selecionado e filtrar por linha
   // Hook fará no-op se contratoId for falsy
   const { data: allProductions, loading, error } = useProductions(
-    selectedContract?.id,
+    selectedContract?.id || '',
     { lineId: line.id }
   );
 
@@ -61,58 +61,65 @@ export const LineDetailScreen: React.FC<LineDetailScreenProps> = ({ route, navig
 
   const ProductionItem = ({ production }: { production: any }) => (
     <Card style={{ marginBottom: 8 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <View style={{ flex: 1 }}>
-          <View style={{ 
-            backgroundColor: production.status === 'EM PRODUCAO' ? theme.colors.success : theme.colors.textSecondary,
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-            borderRadius: 4,
-            alignSelf: 'flex-start',
-            marginBottom: 8
-          }}>
-            <Text style={{ 
-              color: theme.colors.white,
-              fontSize: 12,
-              fontWeight: 'bold'
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate('ProductionDetail', {
+            production: production,
+            line: line
+          });
+        }}
+      >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flex: 1 }}>
+            <View style={{ 
+              backgroundColor: production.status === 'EM PRODUCAO' ? theme.colors.success : theme.colors.textSecondary,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              borderRadius: 4,
+              alignSelf: 'flex-start',
+              marginBottom: 8
             }}>
-              {line.name}
+              <Text style={{ 
+                color: theme.colors.white,
+                fontSize: 12,
+                fontWeight: 'bold'
+              }}>
+                {line.name}
+              </Text>
+              <Text style={{ 
+                color: theme.colors.white,
+                fontSize: 10
+              }}>
+                {production.status}
+              </Text>
+            </View>
+            
+            <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
+              Código: <Text style={{ fontWeight: 'normal' }}>{production.productCode}</Text>
             </Text>
-            <Text style={{ 
-              color: theme.colors.white,
-              fontSize: 10
-            }}>
-              {production.status}
+            
+            <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
+              Produto: <Text style={{ fontWeight: 'normal' }}>{production.productName}</Text>
             </Text>
+            
+            <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
+              Técnico: <Text style={{ fontWeight: 'normal' }}>{production.technician}</Text>
+            </Text>
+            
+            <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
+              Data início: <Text style={{ fontWeight: 'normal' }}>{production.startDate}</Text>
+            </Text>
+            
+            {production.endDate && (
+              <Text style={{ fontSize: 14, fontWeight: 'bold' }}>
+                Data final: <Text style={{ fontWeight: 'normal' }}>{production.endDate}</Text>
+              </Text>
+            )}
           </View>
           
-          <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
-            Código: <Text style={{ fontWeight: 'normal' }}>{production.productCode}</Text>
-          </Text>
-          
-          <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
-            Produto: <Text style={{ fontWeight: 'normal' }}>{production.productName}</Text>
-          </Text>
-          
-          <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
-            Técnico: <Text style={{ fontWeight: 'normal' }}>{production.technician}</Text>
-          </Text>
-          
-          <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
-            Data início: <Text style={{ fontWeight: 'normal' }}>{production.startDate}</Text>
-          </Text>
-          
-          {production.endDate && (
-            <Text style={{ fontSize: 14, fontWeight: 'bold' }}>
-              Data final: <Text style={{ fontWeight: 'normal' }}>{production.endDate}</Text>
-            </Text>
-          )}
-        </View>
-        
-        <TouchableOpacity>
           <Text style={{ fontSize: 18, color: theme.colors.primary }}>→</Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      </TouchableOpacity>
     </Card>
   );
 
