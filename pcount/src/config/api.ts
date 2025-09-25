@@ -23,9 +23,9 @@ export const API_CONFIG = {
   },
 };
 
-// Endpoints da API PCount - TODOS NA V2 conforme documentação Swagger
+// Endpoints da API PCount conforme documentação Swagger
 export const API_ENDPOINTS = {
-  // API V2 - TODOS os endpoints (conforme documentação Swagger)
+  // API V2 - Apenas autenticação disponível
   V2: {
     // Autenticação
     AUTH: {
@@ -33,17 +33,20 @@ export const API_ENDPOINTS = {
       REFRESH: '/Account/Refresh',
       REGISTER_DEVICE: '/Account/RegisterDevice',
     },
-    
+  },
+  
+  // API V1 - Todos os outros endpoints estão em V1 conforme documentação
+  V1: {
     // Contratos
     CONTRACTS: '/Contrato/Get',
     
-    // Circuitos (Linhas de produção) - MOVIDO PARA V2
-    CIRCUITOS: (contratoId: string) => `/Circuito/GetByContrato/${contratoId}`,
+    // Circuitos (Linhas de produção) - Confirmado V1 na documentação
+    CIRCUITOS: (contratoId: string) => `/Circuito/${contratoId}/Get`,
     
-    // Dashboard - CORRIGIDO PARA V1 conforme documentação Swagger
+    // Dashboard - V1 com POST method
     DASHBOARD: (contratoId: string) => `/Dashboard/${contratoId}/Get`,
     
-    // Produções - MOVIDAS PARA V2
+    // Produções - V1 conforme documentação
     PRODUCTIONS: {
       GET: (contratoId: string, id: string) => `/Producao/${contratoId}/Get/${id}`,
       GET_BY_CIRCUITO: (contratoId: string, circuitoId: string) => `/Producao/${contratoId}/GetByCircuito/${circuitoId}`,
@@ -55,29 +58,30 @@ export const API_ENDPOINTS = {
       APONTAR: (contratoId: string) => `/Producao/${contratoId}/ApontarProducao`,
     },
     
-    // Produtos - MOVIDOS PARA V2
+    // Produtos - V1 conforme documentação
     PRODUTOS: (contratoId: string) => `/Produto/${contratoId}/Get`,
     FORMACAO_PALETE: (contratoId: string) => `/Produto/${contratoId}/GetFormacaoPalete`,
-  },
-  
-  // API V1 - Dashboard ainda usa V1 conforme Swagger
-  V1: {
-    DASHBOARD: (contratoId: string) => `/Dashboard/${contratoId}/Get`,
+    
+    // Fila de Produção - V1 conforme documentação
+    FILA_PRODUCAO: {
+      INICIAR: (contratoId: string) => `/FilaProducao/${contratoId}/Iniciar`,
+      ADICIONAR: (contratoId: string) => `/FilaProducao/${contratoId}/Adicionar`,
+      ATUALIZAR: (contratoId: string) => `/FilaProducao/${contratoId}/Atualizar`,
+    },
   },
 };
 
-// Mantém compatibilidade com código existente - TODOS os endpoints agora na V2
+// Mantém compatibilidade com código existente - Endpoints corretos por versão
 export const API_ENDPOINTS_COMPAT = {
   // Autenticação (V2)
   AUTH: API_ENDPOINTS.V2.AUTH,
   
-  // Contratos (V2)
-  CONTRACTS: API_ENDPOINTS.V2.CONTRACTS,
-  
-  // Todos os outros endpoints agora também na V2 (exceto Dashboard)
-  CIRCUITOS: API_ENDPOINTS.V2.CIRCUITOS,
+  // Todos os outros endpoints estão em V1 conforme documentação
+  CONTRACTS: API_ENDPOINTS.V1.CONTRACTS,
+  CIRCUITOS: API_ENDPOINTS.V1.CIRCUITOS,
   DASHBOARD: API_ENDPOINTS.V1.DASHBOARD,
-  PRODUCTIONS: API_ENDPOINTS.V2.PRODUCTIONS,
-  PRODUTOS: API_ENDPOINTS.V2.PRODUTOS,
-  FORMACAO_PALETE: API_ENDPOINTS.V2.FORMACAO_PALETE,
+  PRODUCTIONS: API_ENDPOINTS.V1.PRODUCTIONS,
+  PRODUTOS: API_ENDPOINTS.V1.PRODUTOS,
+  FORMACAO_PALETE: API_ENDPOINTS.V1.FORMACAO_PALETE,
+  FILA_PRODUCAO: API_ENDPOINTS.V1.FILA_PRODUCAO,
 };

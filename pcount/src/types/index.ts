@@ -47,11 +47,19 @@ export interface DashboardSearchDto {
 }
 
 export interface DashboardResponseDto {
-  mediaProducao?: number;
-  totalProduzido?: number;
-  producaoHoraria?: Array<{ hora: string; valor: number }>;
-  horasOperacao?: string;
-  horasProducao?: string;
+  horaProdutiva?: string | null;
+  horaOciosa?: string | null;
+  mediaHora?: number;
+  totalProduzido?: {
+    maximo: number;
+    minimo: number;
+    total: number;
+  };
+  totalProduzidoHora?: Array<{
+    dataHora: string;
+    valor1: number;
+    valor2: number;
+  }>;
 }
 
 export interface AuthContextType {

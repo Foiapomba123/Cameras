@@ -236,7 +236,7 @@ export class ProductionService {
         // Se nenhuma linha específica, precisamos buscar todas as linhas do contrato
         try {
           const circuits = await apiService.get<any[]>(
-            `/Circuito/GetByContrato/${contratoId}`
+            API_ENDPOINTS.CIRCUITOS(contratoId)
           );
           circuitoIds = circuits.map(c => c.id || c.circuitoId || c.Id || c.CircuitoId).filter(Boolean);
           console.log('Circuitos carregados para Dashboard:', circuitoIds);
@@ -247,14 +247,12 @@ export class ProductionService {
         }
       }
       
-      // Mapear filtros para o DTO esperado pela API - formato correto com wrapper e PascalCase
+      // Mapear filtros para o DTO esperado pela API - DashboardSearchDto com campos lowercase
       const requestBody = {
-        dashboardSearch: {
-          UsuarioId: validUsuarioId,
-          De: filters?.startDate ? `${filters.startDate}T00:00:00` : undefined,
-          Ate: filters?.endDate ? `${filters.endDate}T23:59:59` : undefined,
-          CircuitoIds: circuitoIds, // Array não-vazio conforme requerido pela API
-        }
+        usuarioId: validUsuarioId,
+        de: filters?.startDate ? `${filters.startDate}T00:00:00` : undefined,
+        ate: filters?.endDate ? `${filters.endDate}T23:59:59` : undefined,
+        circuitoIds: circuitoIds, // Array não-vazio conforme requerido pela API
       };
 
       // A API PCount Dashboard usa V1 conforme documentação Swagger
@@ -269,15 +267,20 @@ export class ProductionService {
         requestBody
       );
       
+      
       // Mapear resposta do dashboard para ProductionStats usando dados reais da API
+      const horaProdutiva = response.horaProdutiva ? parseFloat(response.horaProdutiva) : 0;
+      const horaOciosa = response.horaOciosa ? parseFloat(response.horaOciosa) : 0;
+      const totalHorasOperacao = horaProdutiva + horaOciosa;
+      
       return {
-        operationHours: response.horasOperacao || '--',
-        productiveHours: response.horasProducao || '--',
-        avgProduction: response.mediaProducao || 0,
-        totalProduced: response.totalProduzido || 0,
-        hourlyProduction: response.producaoHoraria?.map((item: any) => ({
-          hour: item.hora,
-          value: item.valor
+        operationHours: totalHorasOperacao.toFixed(1),
+        productiveHours: response.horaProdutiva || '--', 
+        avgProduction: response.mediaHora || 0,
+        totalProduced: response.totalProduzido?.total || 0,
+        hourlyProduction: response.totalProduzidoHora?.map((item: any) => ({
+          hour: `${item.dataHora}:00`,
+          value: item.valor1 || 0
         })) || [],
       };
     } catch (error: any) {
@@ -289,53 +292,8 @@ export class ProductionService {
         url: API_ENDPOINTS.DASHBOARD(contratoId)
       });
       
-      // Fallback com dados mock em caso de erro (somente se explicitamente habilitado)
-      const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true';
-      
-      if (mockFallbackEnabled) {
-        console.warn('API de Dashboard falhou para contrato', contratoId, '. Fallback habilitado, usando dados mock. Erro original:', error?.message);
-        console.warn('Filtros aplicados:', filters);
-        
-        // Aplicar filtros aos dados mock para simular filtragem real
-        let mockData = {
-          operationHours: '08:00',
-          productiveHours: '06:45',
-          avgProduction: 125,
-          totalProduced: 850,
-          hourlyProduction: [
-            { hour: '06:00', value: 95 },
-            { hour: '07:00', value: 110 },
-            { hour: '08:00', value: 125 },
-            { hour: '09:00', value: 140 },
-            { hour: '10:00', value: 120 },
-            { hour: '11:00', value: 135 },
-            { hour: '12:00', value: 85 },
-            { hour: '13:00', value: 105 }
-          ],
-        };
-        
-        // Se uma linha específica foi selecionada, ajustar os dados
-        if (filters?.lineId) {
-          mockData.avgProduction = 85; // Simulação de uma linha específica
-          mockData.totalProduced = 680;
-          mockData.hourlyProduction = mockData.hourlyProduction.map(h => ({
-            ...h,
-            value: Math.round(h.value * 0.7) // Simular dados de linha específica
-          }));
-        }
-        
-        // Simular diferenças baseadas no período selecionado
-        const today = new Date().toISOString().split('T')[0];
-        if (filters?.startDate === today && filters?.endDate === today) {
-          // Dados de hoje - mais baixos
-          mockData.totalProduced = Math.round(mockData.totalProduced * 0.3);
-        } else if (filters?.startDate !== today || filters?.endDate !== today) {
-          // Dados de período maior - mais altos
-          mockData.totalProduced = Math.round(mockData.totalProduced * 1.5);
-        }
-        
-        return mockData;
-      }
+      // Não usar fallback - sempre rejeitar erro da API para forçar correção
+      console.error('Dashboard API falhou - verificar configuração de endpoints e autenticação:', error?.message);
       
       throw error;
     }
