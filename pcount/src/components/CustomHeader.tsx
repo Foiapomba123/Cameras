@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../theme';
 
 interface CustomHeaderProps {
@@ -33,12 +34,12 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
             left: 12, 
             top: 58,
             zIndex: 1,
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: theme.borderRadius.md,
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderWidth: 1.5,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
             elevation: 2,
             // Web shadow using boxShadow
             ...Platform.select({
@@ -62,19 +63,17 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
             alignItems: 'center', 
             justifyContent: 'center' 
           }}>
+            <MaterialIcons 
+              name="arrow-back" 
+              size={18} 
+              color={theme.colors.white}
+              style={{ marginRight: 6 }}
+            />
             <Text style={{ 
               color: theme.colors.white, 
-              fontSize: 16, 
+              fontSize: 15, 
               fontWeight: '600',
-              marginRight: 4 
-            }}>
-              ←
-            </Text>
-            <Text style={{ 
-              color: theme.colors.white, 
-              fontSize: 14, 
-              fontWeight: '500',
-              opacity: 0.9 
+              opacity: 0.95 
             }}>
               Voltar
             </Text>

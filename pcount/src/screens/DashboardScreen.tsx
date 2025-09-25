@@ -763,7 +763,7 @@ export const DashboardScreen: React.FC = () => {
           <FeaturedCard>
             <FeaturedCardAccent />
             <FeaturedCardIcon>
-              <MaterialIcons name="arrow-forward" size={20} color={theme.colors.white} />
+              <MaterialIcons name="bar-chart" size={20} color={theme.colors.white} />
             </FeaturedCardIcon>
             <FeaturedCardTitle>Total Produzido</FeaturedCardTitle>
             <FeaturedCardValue>{stats.totalProduced.toLocaleString()}</FeaturedCardValue>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FlatList, View, Text } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useProductionLinesWithFallback } from '../hooks/useMockFallback';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -124,35 +125,7 @@ export const LinesScreen: React.FC<LinesScreenProps> = ({ navigation }) => {
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}>
-                  <View style={{
-                    width: 20,
-                    height: 24,
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    borderColor: theme.colors.white,
-                    borderRadius: 2,
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    paddingTop: 2
-                  }}>
-                    <View style={{
-                      width: 8,
-                      height: 2,
-                      backgroundColor: theme.colors.white,
-                      marginBottom: 1
-                    }} />
-                    <View style={{
-                      width: 8,
-                      height: 2,
-                      backgroundColor: theme.colors.white,
-                      marginBottom: 1
-                    }} />
-                    <View style={{
-                      width: 8,
-                      height: 2,
-                      backgroundColor: theme.colors.white
-                    }} />
-                  </View>
+                  <MaterialIcons name="arrow-forward" size={24} color={theme.colors.white} />
                 </View>
               </View>
               
