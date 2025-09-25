@@ -25,10 +25,6 @@ export function useMockFallback<T>(
     } catch (err) {
       const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true';
       
-      console.log('Fallback mock enabled:', mockFallbackEnabled);
-      console.log('Environment:', process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK);
-      console.error('API call failed:', err);
-      
       if (mockFallbackEnabled) {
         console.warn('API falhou, usando dados mock:', err);
         setData(mockData);

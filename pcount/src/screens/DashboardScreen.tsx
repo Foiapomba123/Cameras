@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { Svg, Rect, Text as SvgText, Line, G } from 'react-native-svg';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useProductionStats, useProductionLines } from '../hooks/useProductions';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -750,15 +751,25 @@ export const DashboardScreen: React.FC = () => {
           </Card>
         </View>
         
-        <FeaturedCard>
-          <FeaturedCardAccent />
-          <FeaturedCardIcon>
-            <Text style={{ color: theme.colors.white, fontSize: 16, fontWeight: 'bold' }}>📊</Text>
-          </FeaturedCardIcon>
-          <FeaturedCardTitle>Total Produzido</FeaturedCardTitle>
-          <FeaturedCardValue>{stats.totalProduced.toLocaleString()}</FeaturedCardValue>
-          <FeaturedCardSubtitle>Unidades produzidas no período</FeaturedCardSubtitle>
-        </FeaturedCard>
+        <TouchableOpacity
+          onPress={() => {
+            // TODO: Navegar para tela de detalhes da produção
+            console.log('Navegar para detalhes da produção');
+          }}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Ver detalhes da produção"
+        >
+          <FeaturedCard>
+            <FeaturedCardAccent />
+            <FeaturedCardIcon>
+              <MaterialIcons name="arrow-forward" size={20} color={theme.colors.white} />
+            </FeaturedCardIcon>
+            <FeaturedCardTitle>Total Produzido</FeaturedCardTitle>
+            <FeaturedCardValue>{stats.totalProduced.toLocaleString()}</FeaturedCardValue>
+            <FeaturedCardSubtitle>Unidades produzidas no período</FeaturedCardSubtitle>
+          </FeaturedCard>
+        </TouchableOpacity>
         
         <Card style={{ marginTop: 16 }}>
           <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 16, color: theme.colors.text }}>TOTAL PRODUZIDO / HORA</Text>

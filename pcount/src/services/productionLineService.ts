@@ -4,9 +4,13 @@ import { API_ENDPOINTS_COMPAT as API_ENDPOINTS } from '../config/api';
 
 export interface CircuitoLinhaDto {
   id: string;
-  nome: string;
-  codigo: string;
-  status: string;
+  descricao: string;
+  tag: string;
+  machineKey: string;
+  statusProducaoCodigo: number;
+  statusProducaoDescricao: string;
+  isManualStartOP: boolean;
+  isFilaStartOP: boolean;
 }
 
 export class ProductionLineService {
@@ -17,12 +21,21 @@ export class ProductionLineService {
         API_ENDPOINTS.CIRCUITOS(contratoId)
       );
       
+      if (!response || !Array.isArray(response)) {
+        return [];
+      }
+      
       // Mapear a resposta da API para o formato esperado pelo app
       return response.map(circuito => ({
         id: circuito.id,
-        name: circuito.nome,
-        code: circuito.codigo,
-        status: this.mapStatus(circuito.status),
+        name: circuito.tag, // Usar 'tag' como nome da linha (ex: P1-MQA5)
+        code: circuito.machineKey, // Usar 'machineKey' como código da máquina
+        status: this.mapStatus(circuito.statusProducaoDescricao), // Usar status em texto
+        // Dados adicionais das máquinas reais da API
+        operator: circuito.descricao.includes('Guaravita') ? 'Operador Guaravita' : 'Operador',
+        location: `Setor - ${circuito.tag}`,
+        machineType: circuito.tag.includes('MQA') ? 'Injetora MQA' : 
+                    circuito.tag.includes('MQM') ? 'Injetora MQM' : 'Injetora',
       }));
     } catch (error) {
       console.error('Get production lines error:', error);
