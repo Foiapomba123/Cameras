@@ -17,6 +17,15 @@ export interface ProductionLine {
   name: string;
   status: 'produzindo' | 'aguardando' | 'iniciando';
   code: string;
+  // Informações adicionais da máquina
+  operator?: string;
+  location?: string;
+  capacity?: number;
+  currentProduction?: number;
+  machineType?: string;
+  lastMaintenance?: string;
+  temperature?: number;
+  efficiency?: number;
 }
 
 export interface Production {

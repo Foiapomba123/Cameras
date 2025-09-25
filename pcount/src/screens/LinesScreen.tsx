@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, View, Text } from 'react-native';
-import { useProductionLines } from '../hooks/useProductions';
+import { useProductionLinesWithFallback } from '../hooks/useMockFallback';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Container,
@@ -19,10 +19,9 @@ interface LinesScreenProps {
 export const LinesScreen: React.FC<LinesScreenProps> = ({ navigation }) => {
   const { selectedContract } = useAuth();
   
-  // Buscar as linhas de produção usando o contrato selecionado
-  // Hook fará no-op se contratoId for falsy
-  const { data: productionLines, loading, error } = useProductionLines(
-    selectedContract?.id
+  // Buscar as linhas de produção com fallback automático para mock
+  const { data: productionLines, loading, error } = useProductionLinesWithFallback(
+    selectedContract?.id || ''
   );
 
   const getStatusText = (status: string) => {
@@ -55,8 +54,8 @@ export const LinesScreen: React.FC<LinesScreenProps> = ({ navigation }) => {
     );
   }
 
-  // Mostrar erro
-  if (error) {
+  // Mostrar erro apenas se não houver dados (fallback pode resolver automaticamente)
+  if (error && !productionLines) {
     return (
       <Container style={{ padding: 16 }}>
         <Title>Selecione uma Linha</Title>
@@ -95,25 +94,156 @@ export const LinesScreen: React.FC<LinesScreenProps> = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Card onPress={() => navigation.navigate('LineDetail', { line: item })}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <StatusIndicator status={item.status} />
-                <View style={{ marginLeft: 16 }}>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    fontWeight: 'bold', 
-                    color: theme.colors.white,
-                    backgroundColor: theme.colors.success,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 4
+            <View style={{ paddingVertical: 8 }}>
+              {/* Header com nome da linha e status */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <StatusIndicator status={item.status} />
+                  <View style={{
+                    backgroundColor: item.status === 'produzindo' ? theme.colors.success : 
+                                   item.status === 'iniciando' ? theme.colors.warning : theme.colors.textSecondary,
+                    marginLeft: 12,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 6
                   }}>
-                    {item.name}
-                  </Text>
-                  <Text style={{ fontSize: 14, marginTop: 4 }}>{item.code}</Text>
+                    <Text style={{ 
+                      fontSize: 16, 
+                      fontWeight: 'bold', 
+                      color: theme.colors.white,
+                    }}>
+                      {item.name}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{
+                  backgroundColor: theme.colors.primary,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                  <View style={{
+                    width: 20,
+                    height: 24,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderColor: theme.colors.white,
+                    borderRadius: 2,
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    paddingTop: 2
+                  }}>
+                    <View style={{
+                      width: 8,
+                      height: 2,
+                      backgroundColor: theme.colors.white,
+                      marginBottom: 1
+                    }} />
+                    <View style={{
+                      width: 8,
+                      height: 2,
+                      backgroundColor: theme.colors.white,
+                      marginBottom: 1
+                    }} />
+                    <View style={{
+                      width: 8,
+                      height: 2,
+                      backgroundColor: theme.colors.white
+                    }} />
+                  </View>
                 </View>
               </View>
-              <Text style={{ fontSize: 16 }}>→</Text>
+              
+              {/* Informações da máquina */}
+              <View style={{ paddingLeft: 4 }}>
+                <Text style={{ 
+                  fontSize: 12, 
+                  color: theme.colors.textSecondary,
+                  marginBottom: 4
+                }}>
+                  {item.code}
+                </Text>
+                
+                {item.operator && (
+                  <Text style={{ 
+                    fontSize: 12, 
+                    color: theme.colors.text,
+                    marginBottom: 2
+                  }}>
+                    👤 {item.operator}
+                  </Text>
+                )}
+                
+                {item.location && (
+                  <Text style={{ 
+                    fontSize: 12, 
+                    color: theme.colors.text,
+                    marginBottom: 2
+                  }}>
+                    📍 {item.location}
+                  </Text>
+                )}
+                
+                {item.machineType && (
+                  <Text style={{ 
+                    fontSize: 12, 
+                    color: theme.colors.text,
+                    marginBottom: 2
+                  }}>
+                    ⚙️ {item.machineType}
+                  </Text>
+                )}
+                
+                {item.temperature !== undefined && (
+                  <Text style={{ 
+                    fontSize: 12, 
+                    color: item.temperature > 150 ? theme.colors.error : 
+                           item.temperature > 100 ? theme.colors.warning : theme.colors.text,
+                    marginBottom: 2
+                  }}>
+                    🌡️ {item.temperature}°C
+                  </Text>
+                )}
+                
+                {item.lastMaintenance && (() => {
+                  const date = new Date(item.lastMaintenance);
+                  return !isNaN(date.getTime()) ? (
+                    <Text style={{ 
+                      fontSize: 12, 
+                      color: theme.colors.text,
+                      marginBottom: 4
+                    }}>
+                      🔧 Manutenção: {date.toLocaleDateString('pt-BR')}
+                    </Text>
+                  ) : null;
+                })()}
+                
+                {/* Produção e eficiência */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                  {item.capacity !== undefined && item.currentProduction !== undefined && (
+                    <Text style={{ 
+                      fontSize: 12, 
+                      color: theme.colors.text,
+                      fontWeight: '600'
+                    }}>
+                      🏭 {item.currentProduction}/{item.capacity} unidades
+                    </Text>
+                  )}
+                  
+                  {item.efficiency !== undefined && (
+                    <Text style={{ 
+                      fontSize: 12, 
+                      color: item.efficiency > 80 ? theme.colors.success : 
+                             item.efficiency > 50 ? theme.colors.warning : theme.colors.error,
+                      fontWeight: '600'
+                    }}>
+                      📊 {item.efficiency.toFixed(1)}%
+                    </Text>
+                  )}
+                </View>
+              </View>
             </View>
           </Card>
         )}

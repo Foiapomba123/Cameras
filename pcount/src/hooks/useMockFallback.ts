@@ -23,7 +23,11 @@ export function useMockFallback<T>(
       const result = await apiCall();
       setData(result);
     } catch (err) {
-      const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true' && __DEV__;
+      const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true';
+      
+      console.log('Fallback mock enabled:', mockFallbackEnabled);
+      console.log('Environment:', process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK);
+      console.error('API call failed:', err);
       
       if (mockFallbackEnabled) {
         console.warn('API falhou, usando dados mock:', err);
@@ -53,9 +57,11 @@ export function useMockFallback<T>(
 export function useProductionLinesWithFallback(contractId?: string) {
   return useMockFallback(
     async () => {
-      return contractId 
-        ? productionLineService.getProductionLinesByContract(contractId)
-        : productionLineService.getProductionLines(contractId || '');
+      console.log('Tentando buscar linhas de produção para contrato:', contractId);
+      if (!contractId) {
+        throw new Error('ID do contrato não fornecido');
+      }
+      return productionLineService.getProductionLinesByContract(contractId);
     },
     mockLines,
     [contractId]
