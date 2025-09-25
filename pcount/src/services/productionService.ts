@@ -267,22 +267,133 @@ export class ProductionService {
         requestBody
       );
       
+      // Log detalhado da resposta da API para debugging
+      console.log('Dashboard API resposta completa:', response);
+      console.log('Campos específicos da resposta:', {
+        horaProdutiva: response.horaProdutiva,
+        horaOciosa: response.horaOciosa,
+        mediaHora: response.mediaHora,
+        totalProduzido: response.totalProduzido,
+        totalProduzidoHora: response.totalProduzidoHora
+      });
       
-      // Mapear resposta do dashboard para ProductionStats usando dados reais da API
-      const horaProdutiva = response.horaProdutiva ? parseFloat(response.horaProdutiva) : 0;
-      const horaOciosa = response.horaOciosa ? parseFloat(response.horaOciosa) : 0;
-      const totalHorasOperacao = horaProdutiva + horaOciosa;
+      // Funções auxiliares para parsing robusto de duração
+      const parseDurationToMinutes = (value: any): number => {
+        if (!value) return 0;
+        
+        // Se for número, considera como horas
+        if (typeof value === 'number') return value * 60;
+        
+        const str = String(value).trim();
+        if (!str) return 0;
+        
+        // Formato HH:mm ou H:mm
+        if (str.includes(':')) {
+          const [hours, minutes] = str.split(':').map(part => parseInt(part) || 0);
+          return hours * 60 + minutes;
+        }
+        
+        // String decimal (ex: "2.5")
+        const decimal = parseFloat(str);
+        return isNaN(decimal) ? 0 : decimal * 60;
+      };
       
-      return {
-        operationHours: totalHorasOperacao.toFixed(1),
-        productiveHours: response.horaProdutiva || '--', 
-        avgProduction: response.mediaHora || 0,
-        totalProduced: response.totalProduzido?.total || 0,
+      const formatMinutesToHours = (minutes: number): string => {
+        if (minutes === 0) return '--';
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return mins > 0 ? `${hours}:${mins.toString().padStart(2, '0')}` : `${hours}.0`;
+      };
+      
+      // Analisar dados de produção por hora para calcular métricas reais
+      const hourlyData = response.totalProduzidoHora || [];
+      
+      // Calcular horas produtivas baseado nos dados reais de produção
+      const horasComProducao = hourlyData.filter(item => (item.valor1 || 0) > 0);
+      const horasOperacao = hourlyData.filter(item => 
+        (item.valor1 || 0) > 0 || (item.valor2 || 0) > 0
+      );
+      
+      // Parsing robusto dos dados da API (preferir dados calculados)
+      let horaProdutivaMins = parseDurationToMinutes(response.horaProdutiva);
+      let horaOciosaMins = parseDurationToMinutes(response.horaOciosa);
+      
+      // Se a API não fornece horaProdutiva, calcular baseado nos dados disponíveis
+      if (!response.horaProdutiva || response.horaProdutiva === null) {
+        horaProdutivaMins = horasComProducao.length * 60; // cada hora = 60 minutos
+        console.log(`Calculando horas produtivas: ${horasComProducao.length} horas com produção`);
+      }
+      
+      // Se a API não fornece horaOciosa, calcular baseado na diferença
+      if (!response.horaOciosa || response.horaOciosa === null) {
+        const horasOciosasCalculadas = Math.max(0, horasOperacao.length - horasComProducao.length);
+        horaOciosaMins = horasOciosasCalculadas * 60;
+        console.log(`Calculando horas ociosas: ${horasOciosasCalculadas} horas sem produção`);
+      }
+      
+      const totalHorasOperacaoMins = horaProdutivaMins + horaOciosaMins;
+      
+      // Calcular horas produtivas para exibição
+      let productiveHoursDisplay: string;
+      if (response.horaProdutiva && response.horaProdutiva !== '0' && response.horaProdutiva !== '0.0' && response.horaProdutiva !== null) {
+        productiveHoursDisplay = String(response.horaProdutiva);
+      } else if (horaProdutivaMins > 0) {
+        // Exibir em formato decimal se calculado baseado nos dados reais
+        const horasDecimal = (horaProdutivaMins / 60).toFixed(1);
+        productiveHoursDisplay = horasDecimal;
+      } else {
+        productiveHoursDisplay = '--';
+      }
+      
+      // Calcular produção média com fallbacks
+      let avgProduction = 0;
+      const totalProduced = response.totalProduzido?.total || 0;
+      
+      if (response.mediaHora && response.mediaHora > 0) {
+        avgProduction = response.mediaHora;
+      } else if (totalProduced > 0 && horaProdutivaMins > 0) {
+        // Fallback: calcular média com base no total produzido e horas produtivas
+        const hoursProductive = horaProdutivaMins / 60;
+        avgProduction = Math.round(totalProduced / hoursProductive);
+      } else if (response.totalProduzidoHora && response.totalProduzidoHora.length > 0) {
+        // Fallback: calcular média dos dados por hora
+        const hourlyValues = response.totalProduzidoHora
+          .map((item: any) => item.valor1 || 0)
+          .filter((value: number) => value > 0);
+        if (hourlyValues.length > 0) {
+          avgProduction = Math.round(hourlyValues.reduce((sum: number, val: number) => sum + val, 0) / hourlyValues.length);
+        }
+      }
+      
+      const finalStats = {
+        operationHours: (totalHorasOperacaoMins / 60).toFixed(1),
+        productiveHours: productiveHoursDisplay,
+        avgProduction: avgProduction,
+        totalProduced: totalProduced,
         hourlyProduction: response.totalProduzidoHora?.map((item: any) => ({
           hour: `${item.dataHora}:00`,
           value: item.valor1 || 0
         })) || [],
       };
+      
+      // Log dos valores calculados para debugging
+      console.log('Estatísticas calculadas:', {
+        horaProdutivaMins,
+        horaOciosaMins,
+        totalHorasOperacaoMins,
+        productiveHoursDisplay,
+        avgProduction,
+        totalProduced,
+        horasComProducaoCount: horasComProducao.length,
+        horasOperacaoCount: horasOperacao.length,
+        dadosCalculadosDoAPI: {
+          horaProdutiva: response.horaProdutiva,
+          horaOciosa: response.horaOciosa,
+          mediaHora: response.mediaHora
+        }
+      });
+      
+      return finalStats;
     } catch (error: any) {
       console.error('Get production stats error:', error);
       console.error('Erro detalhado da API Dashboard:', {
