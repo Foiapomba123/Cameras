@@ -25,6 +25,7 @@ export function useProductionStats(contratoId: string, filters?: {
   lineId?: string;
   startDate?: string;
   endDate?: string;
+  usuarioId?: string;
 }) {
   return useProductionStatsWithFallback(contratoId, filters);
 }

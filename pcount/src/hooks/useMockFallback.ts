@@ -83,12 +83,13 @@ export function useProductionStatsWithFallback(contractId: string, filters?: {
   lineId?: string;
   startDate?: string;
   endDate?: string;
+  usuarioId?: string;
 }) {
   return useMockFallback(
     async () => {
       return productionService.getProductionStats(contractId, filters);
     },
     mockStats,
-    [contractId, filters?.lineId, filters?.startDate, filters?.endDate]
+    [contractId, filters?.lineId, filters?.startDate, filters?.endDate, filters?.usuarioId]
   );
 }

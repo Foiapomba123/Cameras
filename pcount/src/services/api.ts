@@ -34,11 +34,15 @@ export class ApiService {
 
   /**
    * Determina qual versão da API usar baseada no endpoint
-   * V2: TODOS os endpoints (conforme documentação Swagger)
-   * V1: Não existe mais
+   * V2: Maioria dos endpoints
+   * V1: Dashboard endpoint conforme documentação Swagger
    */
   private getBaseURL(endpoint: string): string {
-    // Todos os endpoints usam V2 conforme documentação Swagger
+    // Dashboard ainda usa V1 conforme documentação Swagger
+    if (endpoint.includes('/Dashboard/')) {
+      return this.baseURLV1;
+    }
+    // Todos os outros endpoints usam V2
     return this.baseURLV2;
   }
 

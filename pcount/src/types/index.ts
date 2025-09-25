@@ -38,6 +38,22 @@ export interface ProductionStats {
   hourlyProduction: Array<{ hour: string; value: number }>;
 }
 
+// DTOs para API PCount Dashboard
+export interface DashboardSearchDto {
+  usuarioId: string;
+  de?: string;
+  ate?: string;
+  circuitoIds?: string[];
+}
+
+export interface DashboardResponseDto {
+  mediaProducao?: number;
+  totalProduzido?: number;
+  producaoHoraria?: Array<{ hora: string; valor: number }>;
+  horasOperacao?: string;
+  horasProducao?: string;
+}
+
 export interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: User | null;

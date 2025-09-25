@@ -603,7 +603,7 @@ const ProductionSelector: React.FC<{
 };
 
 export const DashboardScreen: React.FC = () => {
-  const { selectedContract, logout } = useAuth();
+  const { selectedContract, currentUser, logout } = useAuth();
   
   // Estados para filtros
   // Função para obter data do Brasil (deve estar antes dos useState)
@@ -629,7 +629,8 @@ export const DashboardScreen: React.FC = () => {
     startDate,
     endDate,
     lineId: selectedLineId || undefined,
-  }), [startDate, endDate, selectedLineId]);
+    usuarioId: currentUser?.id,
+  }), [startDate, endDate, selectedLineId, currentUser?.id]);
   
   const handleDateChange = (start: string, end: string) => {
     setStartDate(start);
@@ -640,12 +641,22 @@ export const DashboardScreen: React.FC = () => {
     await logout();
   };
 
-  // Verificar se um contrato foi selecionado antes de chamar hooks
+  // Verificar se um contrato foi selecionado e usuário autenticado antes de chamar hooks
   if (!selectedContract) {
     return (
       <Container style={{ padding: 16 }}>
         <ErrorMessage 
           message="Nenhum contrato selecionado. Por favor, faça login novamente."
+        />
+      </Container>
+    );
+  }
+
+  if (!currentUser?.id) {
+    return (
+      <Container style={{ padding: 16 }}>
+        <ErrorMessage 
+          message="Usuário não autenticado. Por favor, faça login novamente."
         />
       </Container>
     );

@@ -40,7 +40,7 @@ export const API_ENDPOINTS = {
     // Circuitos (Linhas de produção) - MOVIDO PARA V2
     CIRCUITOS: (contratoId: string) => `/Circuito/GetByContrato/${contratoId}`,
     
-    // Dashboard - MOVIDO PARA V2
+    // Dashboard - CORRIGIDO PARA V1 conforme documentação Swagger
     DASHBOARD: (contratoId: string) => `/Dashboard/${contratoId}/Get`,
     
     // Produções - MOVIDAS PARA V2
@@ -60,8 +60,10 @@ export const API_ENDPOINTS = {
     FORMACAO_PALETE: (contratoId: string) => `/Produto/${contratoId}/GetFormacaoPalete`,
   },
   
-  // API V1 - NÃO EXISTE MAIS (mantido para compatibilidade - será removido)
-  V1: {},
+  // API V1 - Dashboard ainda usa V1 conforme Swagger
+  V1: {
+    DASHBOARD: (contratoId: string) => `/Dashboard/${contratoId}/Get`,
+  },
 };
 
 // Mantém compatibilidade com código existente - TODOS os endpoints agora na V2
@@ -72,9 +74,9 @@ export const API_ENDPOINTS_COMPAT = {
   // Contratos (V2)
   CONTRACTS: API_ENDPOINTS.V2.CONTRACTS,
   
-  // Todos os outros endpoints agora também na V2
+  // Todos os outros endpoints agora também na V2 (exceto Dashboard)
   CIRCUITOS: API_ENDPOINTS.V2.CIRCUITOS,
-  DASHBOARD: API_ENDPOINTS.V2.DASHBOARD,
+  DASHBOARD: API_ENDPOINTS.V1.DASHBOARD,
   PRODUCTIONS: API_ENDPOINTS.V2.PRODUCTIONS,
   PRODUTOS: API_ENDPOINTS.V2.PRODUTOS,
   FORMACAO_PALETE: API_ENDPOINTS.V2.FORMACAO_PALETE,

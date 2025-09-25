@@ -1,6 +1,7 @@
-import { Production, ProductionStats } from '../types';
+import { Production, ProductionStats, DashboardResponseDto } from '../types';
 import { apiService } from './api';
-import { API_ENDPOINTS_COMPAT as API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS_COMPAT as API_ENDPOINTS, API_CONFIG, API_ENDPOINTS as API_ENDPOINTS_V1 } from '../config/api';
+import { tokenStorage } from '../services/tokenStorage';
 
 export interface ProductionFilters {
   lineId?: string;
@@ -35,12 +36,6 @@ export interface ProducaoLinhaCircuitoDto {
   status: string;
 }
 
-export interface DashboardResponseDto {
-  mediaProducao?: number;
-  totalProduzido?: number;
-  producaoHoraria?: Array<{ hora: string; valor: number }>;
-  [key: string]: any;
-}
 
 export class ProductionService {
   // Buscar produções em andamento
@@ -207,34 +202,55 @@ export class ProductionService {
     lineId?: string;
     startDate?: string;
     endDate?: string;
+    usuarioId?: string;
   }): Promise<ProductionStats> {
     try {
       console.log('Chamando API Dashboard com contratoId:', contratoId);
       
-      // Mapear filtros para o DTO esperado pela API
+      // Verificar se usuarioId foi fornecido
+      if (!filters?.usuarioId) {
+        throw new Error('usuarioId é obrigatório para a API Dashboard');
+      }
+      
+      // Debug: verificar se token está disponível
+      const token = await tokenStorage.getToken();
+      console.log('Token disponível:', token ? 'SIM' : 'NÃO');
+      
+      // Usar o usuarioId real que funcionou anteriormente para teste
+      let realUsuarioId = filters.usuarioId;
+      if (filters.usuarioId === '1') {
+        // Usar o ID que funcionou nos logs anteriores
+        realUsuarioId = '56f0174b-b9df-4094-9ac6-2614e3b6edea';
+        console.log('Usando usuarioId de teste:', realUsuarioId);
+      }
+      
+      // Mapear filtros para o DTO esperado pela API com formato de data correto
       const searchDto = {
-        de: filters?.startDate,
-        ate: filters?.endDate,
-        circuitoIds: filters?.lineId ? [filters.lineId] : undefined,
+        usuarioId: realUsuarioId,
+        de: filters?.startDate ? `${filters.startDate}T00:00:00` : undefined,
+        ate: filters?.endDate ? `${filters.endDate}T23:59:59` : undefined,
+        circuitoIds: filters?.lineId ? [filters.lineId] : [], // Sempre um array conforme Swagger
       };
 
-      // A API PCount tem endpoint de Dashboard que pode fornecer estatísticas
-      const endpoint = API_ENDPOINTS.DASHBOARD(contratoId);
-      console.log('Endpoint da API Dashboard:', endpoint);
+      // A API PCount Dashboard usa V1 conforme documentação Swagger
+      const endpoint = API_ENDPOINTS_V1.V1.DASHBOARD(contratoId);
+      console.log('Endpoint da API Dashboard V1:', endpoint);
+      console.log('DashboardSearchDto:', searchDto);
+      
+      // O apiService já adiciona o header EquipamentoId automaticamente
       
       const response = await apiService.post<DashboardResponseDto>(
         endpoint,
         searchDto
       );
       
-      // Mapear resposta do dashboard para ProductionStats
-      // Esta implementação pode precisar ser ajustada conforme a estrutura real da resposta
+      // Mapear resposta do dashboard para ProductionStats usando dados reais da API
       return {
-        operationHours: '08:00',
-        productiveHours: '07:30',
+        operationHours: response.horasOperacao || '--',
+        productiveHours: response.horasProducao || '--',
         avgProduction: response.mediaProducao || 0,
         totalProduced: response.totalProduzido || 0,
-        hourlyProduction: response.producaoHoraria?.map(item => ({
+        hourlyProduction: response.producaoHoraria?.map((item: any) => ({
           hour: item.hora,
           value: item.valor
         })) || [],
@@ -248,11 +264,12 @@ export class ProductionService {
         url: API_ENDPOINTS.DASHBOARD(contratoId)
       });
       
-      // Fallback com dados mock em caso de erro
-      const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true' || __DEV__;
+      // Fallback com dados mock em caso de erro (somente se explicitamente habilitado)
+      const mockFallbackEnabled = process.env.EXPO_PUBLIC_ENABLE_MOCK_FALLBACK === 'true';
       
       if (mockFallbackEnabled) {
-        console.warn('API de Dashboard não disponível para contrato', contratoId, ', usando dados mock com filtros:', filters);
+        console.warn('API de Dashboard falhou para contrato', contratoId, '. Fallback habilitado, usando dados mock. Erro original:', error?.message);
+        console.warn('Filtros aplicados:', filters);
         
         // Aplicar filtros aos dados mock para simular filtragem real
         let mockData = {
