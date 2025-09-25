@@ -39,11 +39,23 @@ export class AuthService {
         }
       );
       
-      // Armazenar tokens de forma segura
+      // Armazenar tokens e informações do usuário
       if (response.access_token) {
         await tokenStorage.setToken(response.access_token);
         if (response.refresh_token) {
           await tokenStorage.setRefreshToken(response.refresh_token);
+        }
+        
+        // Armazenar informações do usuário do primeiro contrato
+        if (response.contratos && response.contratos.length > 0) {
+          const firstContract = response.contratos[0];
+          const userInfo = {
+            id: firstContract.usuarioId,
+            name: firstContract.usuarioNome || email,
+            email: firstContract.usuarioEmail || email,
+            role: 'admin' // Assumir admin por padrão
+          };
+          await tokenStorage.setUserInfo(userInfo);
         }
       }
       
@@ -89,22 +101,25 @@ export class AuthService {
     }
   }
 
-  // Verificar se o usuário está autenticado (simplificado para a API PCount)
+  // Verificar se o usuário está autenticado usando dados reais armazenados
   async validateToken(): Promise<User | null> {
     try {
       const token = await tokenStorage.getToken();
       if (!token) return null;
       
-      // A API PCount pode não ter endpoint específico de validação
-      // Vamos assumir que se o token existe, é válido
-      // Em uma implementação real, você faria uma chamada para validar
-      return {
-        id: '1',
-        name: 'Admin',
-        email: 'admin@admin.com',
-        password: '',
-        role: 'admin'
-      };
+      // Recuperar informações reais do usuário armazenadas durante o login
+      const userInfo = await tokenStorage.getUserInfo();
+      if (userInfo) {
+        return {
+          id: userInfo.id,
+          name: userInfo.name,
+          email: userInfo.email,
+          password: '',
+          role: userInfo.role || 'admin'
+        };
+      }
+      
+      return null;
     } catch (error) {
       console.error('Token validation error:', error);
       return null;

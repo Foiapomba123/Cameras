@@ -5,6 +5,8 @@ const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const CONTRACT_ID_KEY = 'selected_contract_id';
 const CONTRACT_DATA_KEY = 'selected_contract_data';
+const USER_INFO_KEY = 'user_info';
+const DEVICE_UUID_KEY = 'device_uuid';
 
 export class TokenStorage {
   private isSecureStoreAvailable: boolean | null = null;
@@ -180,11 +182,57 @@ export class TokenStorage {
     }
   }
 
-  // Limpar todos os dados (tokens + contrato)
+  // Armazenar informações do usuário
+  async setUserInfo(userInfo: any): Promise<void> {
+    try {
+      await this.setToStorage(USER_INFO_KEY, JSON.stringify(userInfo));
+    } catch (error) {
+      console.error('Erro ao armazenar informações do usuário:', error);
+    }
+  }
+
+  // Recuperar informações do usuário
+  async getUserInfo(): Promise<any | null> {
+    try {
+      const data = await this.getFromStorage(USER_INFO_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Gerar e recuperar UUID único do dispositivo
+  async getDeviceUUID(): Promise<string> {
+    try {
+      let uuid = await this.getFromStorage(DEVICE_UUID_KEY);
+      if (!uuid) {
+        // Gerar UUID simples para dispositivo
+        uuid = 'device-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+        await this.setToStorage(DEVICE_UUID_KEY, uuid);
+      }
+      return uuid;
+    } catch (error) {
+      // Fallback UUID se houver erro
+      return 'device-fallback-' + Date.now();
+    }
+  }
+
+  // Limpar informações do usuário
+  async clearUserInfo(): Promise<void> {
+    try {
+      await this.removeFromStorage(USER_INFO_KEY);
+    } catch (error) {
+      console.error('Erro ao limpar informações do usuário:', error);
+    }
+  }
+
+  // Limpar todos os dados (tokens + contrato + usuário)
   async clearAllData(): Promise<void> {
     try {
       await this.clearTokens();
       await this.clearContractData();
+      await this.clearUserInfo();
+      // Não limpar device UUID - deve persistir
     } catch (error) {
       console.error('Erro ao limpar todos os dados:', error);
     }

@@ -73,6 +73,9 @@ export class ApiService {
         console.warn('Erro ao recuperar contractId do storage:', error);
       }
     }
+    
+    // Obter UUID único do dispositivo para EquipamentoId
+    const deviceUUID = await tokenStorage.getDeviceUUID();
 
     const config: RequestInit = {
       ...options,
@@ -80,8 +83,8 @@ export class ApiService {
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
         ...(token && { 'Authorization': `Bearer ${token}` }),
-        // Usar o ID do contrato ativo como EquipamentoId
-        'EquipamentoId': activeContractId || 'web-client',
+        // Usar UUID único do dispositivo como EquipamentoId
+        'EquipamentoId': deviceUUID,
         ...options.headers,
       },
     };
@@ -107,7 +110,20 @@ export class ApiService {
           }
         }
         
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Tentar ler mensagem de erro detalhada do servidor
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody.message || errorBody.error) {
+            errorMessage += ` - ${errorBody.message || errorBody.error}`;
+          }
+          console.error('API Error Details:', errorBody);
+        } catch (parseError) {
+          // Se não conseguir fazer parse do JSON, usar mensagem padrão
+          console.error('Could not parse error response:', parseError);
+        }
+        
+        throw new Error(errorMessage);
       }
       
       // Handle 204 No Content

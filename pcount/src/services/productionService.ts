@@ -216,32 +216,57 @@ export class ProductionService {
       const token = await tokenStorage.getToken();
       console.log('Token disponível:', token ? 'SIM' : 'NÃO');
       
-      // Usar o usuarioId real que funcionou anteriormente para teste
-      let realUsuarioId = filters.usuarioId;
-      if (filters.usuarioId === '1') {
-        // Usar o ID que funcionou nos logs anteriores
-        realUsuarioId = '56f0174b-b9df-4094-9ac6-2614e3b6edea';
-        console.log('Usando usuarioId de teste:', realUsuarioId);
+      // Usar sempre o usuarioId real da sessão autenticada
+      const realUsuarioId = filters.usuarioId;
+      
+      // Verificar se usuarioId é um GUID válido - não usar fallback
+      if (!realUsuarioId || realUsuarioId === '1' || !realUsuarioId.includes('-')) {
+        throw new Error('usuarioId inválido. Por favor, faça login novamente para obter credenciais válidas.');
       }
       
-      // Mapear filtros para o DTO esperado pela API com formato de data correto
-      const searchDto = {
-        usuarioId: realUsuarioId,
-        de: filters?.startDate ? `${filters.startDate}T00:00:00` : undefined,
-        ate: filters?.endDate ? `${filters.endDate}T23:59:59` : undefined,
-        circuitoIds: filters?.lineId ? [filters.lineId] : [], // Sempre um array conforme Swagger
+      const validUsuarioId = realUsuarioId;
+      
+      // Preparar CircuitoIds - API requer array não-vazio
+      let circuitoIds: string[] = [];
+      
+      if (filters?.lineId) {
+        // Se linha específica foi selecionada
+        circuitoIds = [filters.lineId];
+      } else {
+        // Se nenhuma linha específica, precisamos buscar todas as linhas do contrato
+        try {
+          const circuits = await apiService.get<any[]>(
+            `/Circuito/GetByContrato/${contratoId}`
+          );
+          circuitoIds = circuits.map(c => c.id || c.circuitoId || c.Id || c.CircuitoId).filter(Boolean);
+          console.log('Circuitos carregados para Dashboard:', circuitoIds);
+        } catch (circuitError) {
+          console.warn('Não foi possível carregar circuitos, usando array vazio:', circuitError);
+          // Se não conseguir carregar circuitos, pular a chamada do Dashboard
+          throw new Error('Não foi possível carregar as linhas de produção para o Dashboard.');
+        }
+      }
+      
+      // Mapear filtros para o DTO esperado pela API - formato correto com wrapper e PascalCase
+      const requestBody = {
+        dashboardSearch: {
+          UsuarioId: validUsuarioId,
+          De: filters?.startDate ? `${filters.startDate}T00:00:00` : undefined,
+          Ate: filters?.endDate ? `${filters.endDate}T23:59:59` : undefined,
+          CircuitoIds: circuitoIds, // Array não-vazio conforme requerido pela API
+        }
       };
 
       // A API PCount Dashboard usa V1 conforme documentação Swagger
       const endpoint = API_ENDPOINTS_V1.V1.DASHBOARD(contratoId);
       console.log('Endpoint da API Dashboard V1:', endpoint);
-      console.log('DashboardSearchDto:', searchDto);
+      console.log('Dashboard Request Body:', requestBody);
       
       // O apiService já adiciona o header EquipamentoId automaticamente
       
       const response = await apiService.post<DashboardResponseDto>(
         endpoint,
-        searchDto
+        requestBody
       );
       
       // Mapear resposta do dashboard para ProductionStats usando dados reais da API
