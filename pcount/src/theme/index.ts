@@ -91,7 +91,7 @@ export const theme: Theme = {
     accentLight: '#67e8f9',
     secondary: '#8b5cf6',
     background: '#fefefe',
-    backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundGradient: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     surface: '#ffffff',
     surfaceSecondary: '#f8fafc',
     surfaceElevated: '#ffffff',
@@ -116,7 +116,7 @@ export const theme: Theme = {
   gradients: {
     primary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
     accent: 'linear-gradient(135deg, #06b6d4 0%, #10b981 100%)',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
     surface: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
   },
   fonts: {

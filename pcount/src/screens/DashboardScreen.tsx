@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList, useWindowDimensions } from 'react-native';
 import { Svg, Rect, Text as SvgText, Line, G } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -716,21 +716,21 @@ const DateSelector: React.FC<{
         }}
         style={{
           backgroundColor: '#ffffff',
-          paddingHorizontal: theme.spacing.md,
-          paddingVertical: theme.spacing.sm,
-          borderRadius: 16,
-          marginBottom: 0,
+          paddingHorizontal: theme.spacing.lg,
+          paddingVertical: theme.spacing.md,
+          borderRadius: 20,
+          marginBottom: theme.spacing.md,
           alignSelf: 'flex-start',
           borderWidth: 1,
           borderColor: '#e2e8f0',
           shadowColor: '#64748b',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 6,
-          elevation: 3,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
           flexDirection: 'row',
           alignItems: 'center',
-          minWidth: 160
+          minWidth: 240
         }}
       >
         <View style={{
@@ -747,7 +747,7 @@ const DateSelector: React.FC<{
         <View style={{ flex: 1 }}>
           <Text style={{ 
             color: '#475569', 
-            fontSize: 10, 
+            fontSize: theme.fontSizes.xs, 
             fontWeight: '500',
             marginBottom: 2
           }}>
@@ -755,7 +755,7 @@ const DateSelector: React.FC<{
           </Text>
           <Text style={{ 
             color: '#1e293b', 
-            fontSize: 12, 
+            fontSize: theme.fontSizes.sm, 
             fontWeight: '700'
           }}>
             {formatDate(startDate)} - {formatDate(endDate)}
@@ -765,32 +765,26 @@ const DateSelector: React.FC<{
       </TouchableOpacity>
       
       <Modal visible={showModal} transparent animationType="slide">
-        <KeyboardAvoidingView 
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: theme.spacing.lg
+        }}>
           <View style={{
-            flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            justifyContent: 'flex-end',
-            alignItems: 'center'
+            backgroundColor: '#ffffff',
+            borderRadius: 24,
+            padding: theme.spacing.xl,
+            width: '100%',
+            maxWidth: 340,
+            maxHeight: '85%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.25,
+            shadowRadius: 20,
+            elevation: 10
           }}>
-            <View style={{
-              backgroundColor: '#ffffff',
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              paddingTop: theme.spacing.xl,
-              paddingHorizontal: theme.spacing.xl,
-              paddingBottom: theme.spacing.lg,
-              width: '100%',
-              maxHeight: '75%',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -5 },
-              shadowOpacity: 0.25,
-              shadowRadius: 20,
-              elevation: 10
-            }}>
             <View style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -816,11 +810,6 @@ const DateSelector: React.FC<{
               </Text>
             </View>
             
-            <ScrollView 
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              style={{ maxHeight: '100%' }}
-            >
             {/* Seleção manual de datas */}
             <View style={{ marginBottom: theme.spacing.lg }}>
               <Text style={{ 
@@ -927,7 +916,6 @@ const DateSelector: React.FC<{
                 </Text>
               </TouchableOpacity>
             ))}
-            </ScrollView>
             
             <View style={{ flexDirection: 'row', marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
               <TouchableOpacity
@@ -972,9 +960,8 @@ const DateSelector: React.FC<{
                 </Text>
               </TouchableOpacity>
             </View>
-            </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );
@@ -996,21 +983,21 @@ const ProductionSelector: React.FC<{
         onPress={() => setShowModal(true)}
         style={{
           backgroundColor: '#ffffff',
-          paddingHorizontal: theme.spacing.md,
-          paddingVertical: theme.spacing.sm,
-          borderRadius: 16,
-          marginBottom: 0,
+          paddingHorizontal: theme.spacing.lg,
+          paddingVertical: theme.spacing.md,
+          borderRadius: 20,
+          marginBottom: theme.spacing.lg,
           borderWidth: 1,
           borderColor: '#e2e8f0',
           shadowColor: '#64748b',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 6,
-          elevation: 3,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
           flexDirection: 'row',
           alignItems: 'center',
           alignSelf: 'flex-start',
-          minWidth: 140
+          minWidth: 200
         }}
       >
         <View style={{
@@ -1027,20 +1014,17 @@ const ProductionSelector: React.FC<{
         <View style={{ flex: 1 }}>
           <Text style={{ 
             color: '#475569', 
-            fontSize: 10, 
+            fontSize: theme.fontSizes.xs, 
             fontWeight: '500',
             marginBottom: 2
           }}>
             Linha de produção
           </Text>
-          <Text 
-            numberOfLines={2}
-            style={{ 
-              color: '#1e293b', 
-              fontSize: 12, 
-              fontWeight: '700',
-              lineHeight: 14
-            }}>
+          <Text style={{ 
+            color: '#1e293b', 
+            fontSize: theme.fontSizes.sm, 
+            fontWeight: '700'
+          }}>
             {selectedLineId ? selectedLine?.name || 'Linha específica' : 'Todas as Linhas'}
           </Text>
         </View>
@@ -1322,30 +1306,17 @@ export const DashboardScreen: React.FC = () => {
           paddingTop: getResponsivePadding(width)
         }}
       >
-        <View style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: theme.spacing.lg,
-          gap: theme.spacing.lg,
-          paddingHorizontal: theme.spacing.xs
-        }}>
-          <View style={{ flex: 0.48 }}>
-            <DateSelector
-              startDate={startDate}
-              endDate={endDate}
-              onDateChange={handleDateChange}
-            />
-          </View>
-          
-          <View style={{ flex: 0.48 }}>
-            <ProductionSelector
-              selectedLineId={selectedLineId}
-              onLineChange={setSelectedLineId}
-              lines={productionLines || []}
-            />
-          </View>
-        </View>
+        <DateSelector
+          startDate={startDate}
+          endDate={endDate}
+          onDateChange={handleDateChange}
+        />
+        
+        <ProductionSelector
+          selectedLineId={selectedLineId}
+          onLineChange={setSelectedLineId}
+          lines={productionLines || []}
+        />
         
         <Text style={{ 
           fontSize: isSmallScreen ? 16 : isMediumScreen ? 18 : 20, 
