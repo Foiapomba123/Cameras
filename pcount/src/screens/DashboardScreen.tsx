@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { Svg, Rect, Text as SvgText, Line, G } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useProductionStats, useProductionLines } from '../hooks/useProductions';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,169 +23,512 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { theme } from '../theme';
 
-const { width } = Dimensions.get('window');
+// Funções para obter valores responsivos baseados na largura
+const getResponsivePadding = (width: number) => {
+  if (width < 375) return 12;
+  if (width < 768) return 16;
+  return 20;
+};
 
-// Componente de gráfico de barras personalizado
+const getResponsiveCardSpacing = (width: number) => {
+  if (width < 375) return theme.spacing.xs / 2;
+  if (width < 768) return theme.spacing.xs;
+  return theme.spacing.sm;
+};
+
+// Componente de cartão do Total Produzido com design modernizado
+const TotalProducedCard: React.FC<{ 
+  value: number; 
+  title: string;
+  subtitle?: string;
+}> = ({ value, title, subtitle }) => {
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width < 375;
+  // Garantir que o valor seja positivo
+  const safeValue = Math.max(0, value);
+  
+  // Definir os níveis e cores (baseado na imagem de referência)
+  const levels = [
+    { threshold: 4800, color: '#dc2626', label: '4800' },
+    { threshold: 6600, color: '#ea580c', label: '6600' },
+    { threshold: 8400, color: '#65a30d', label: '8400' },
+    { threshold: 10200, color: '#16a34a', label: '10200' },
+    { threshold: 13000, color: '#0891b2', label: '13000' }
+  ];
+  
+  // Determinar qual nível foi atingido
+  const currentLevel = levels.reduce((prev, curr) => 
+    safeValue >= curr.threshold ? curr : prev, 
+    levels[0]
+  );
+  
+  return (
+    <View style={{
+      backgroundColor: '#ffffff',
+      borderRadius: theme.borderRadius['2xl'],
+      padding: isSmallScreen ? theme.spacing.lg : theme.spacing.xl,
+      marginVertical: theme.spacing.md,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 6,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Efeito de gradiente de fundo */}
+      <LinearGradient
+        colors={['rgba(6, 182, 212, 0.05)', 'rgba(6, 182, 212, 0.02)']}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0
+        }}
+      />
+      
+      {/* Título */}
+      <Text style={{
+        fontSize: isSmallScreen ? theme.fontSizes.xs : theme.fontSizes.sm,
+        fontWeight: '700',
+        color: theme.colors.text,
+        textAlign: 'center',
+        marginBottom: isSmallScreen ? theme.spacing.md : theme.spacing.lg,
+        letterSpacing: 1,
+        textTransform: 'uppercase'
+      }}>
+        {title}
+      </Text>
+      
+      {/* Layout do conteúdo principal */}
+      <View style={{ alignItems: 'center' }}>
+        {/* Círculo visual com indicador de progresso */}
+        <View style={{
+          width: isSmallScreen ? 140 : 180,
+          height: isSmallScreen ? 140 : 180,
+          borderRadius: isSmallScreen ? 70 : 90,
+          backgroundColor: '#f8fafc',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: isSmallScreen ? theme.spacing.md : theme.spacing.lg,
+          borderWidth: isSmallScreen ? 6 : 8,
+          borderColor: currentLevel.color,
+          position: 'relative'
+        }}>
+          {/* Valor principal */}
+          <Text 
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            style={{
+              fontSize: isSmallScreen ? 28 : 36,
+              fontWeight: '900',
+              color: theme.colors.text,
+              textAlign: 'center',
+              paddingHorizontal: theme.spacing.sm
+            }}
+          >
+            {safeValue.toLocaleString('pt-BR')}
+          </Text>
+          
+          {/* Indicador pequeno do nível atual */}
+          <View style={{
+            position: 'absolute',
+            top: isSmallScreen ? -8 : -12,
+            right: isSmallScreen ? -8 : -12,
+            width: isSmallScreen ? 20 : 24,
+            height: isSmallScreen ? 20 : 24,
+            borderRadius: isSmallScreen ? 10 : 12,
+            backgroundColor: currentLevel.color,
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <MaterialIcons name="trending-up" size={isSmallScreen ? 12 : 14} color="#ffffff" />
+          </View>
+        </View>
+        
+        {/* Legend responsiva */}
+        <View style={{ 
+          flexDirection: 'row', 
+          flexWrap: 'wrap', 
+          justifyContent: 'center',
+          marginBottom: isSmallScreen ? theme.spacing.sm : theme.spacing.md,
+          paddingHorizontal: theme.spacing.xs
+        }}>
+          {levels.map((level, index) => (
+            <View key={index} style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginHorizontal: isSmallScreen ? 2 : theme.spacing.xs,
+              marginBottom: theme.spacing.xs,
+              backgroundColor: safeValue >= level.threshold ? level.color : '#f1f5f9',
+              paddingHorizontal: isSmallScreen ? 6 : theme.spacing.sm,
+              paddingVertical: isSmallScreen ? 2 : 4,
+              borderRadius: theme.borderRadius.md,
+              opacity: safeValue >= level.threshold ? 1 : 0.6
+            }}>
+              <Text style={{
+                fontSize: isSmallScreen ? 10 : theme.fontSizes.xs,
+                color: safeValue >= level.threshold ? '#ffffff' : theme.colors.text,
+                fontWeight: '700'
+              }}>
+                {level.label}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      
+      {subtitle && (
+        <Text style={{
+          fontSize: theme.fontSizes.xs,
+          color: theme.colors.textSecondary,
+          textAlign: 'center',
+          fontWeight: '500',
+          marginTop: theme.spacing.sm
+        }}>
+          {subtitle}
+        </Text>
+      )}
+    </View>
+  );
+};
+
+// Componente de cartão de estatística modernizado
+const StatCard: React.FC<{
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: string;
+  accentColor: string;
+  backgroundColor?: string;
+}> = ({ title, value, subtitle, icon, accentColor, backgroundColor = '#ffffff' }) => {
+  const { width } = useWindowDimensions();
+  // Tamanhos responsivos baseados no tamanho da tela
+  const isSmallScreen = width < 375;
+  const isLargeScreen = width >= 768;
+  const cardPadding = isSmallScreen ? theme.spacing.sm : theme.spacing.md;
+  const titleFontSize = isSmallScreen ? 10 : theme.fontSizes.xs;
+  const valueFontSize = isSmallScreen ? theme.fontSizes.lg : theme.fontSizes.xl;
+  const subtitleFontSize = isSmallScreen ? 9 : theme.fontSizes.xs;
+  const iconSize = isSmallScreen ? 24 : 28;
+  const iconPadding = isSmallScreen ? 4 : 6;
+  const iconInnerSize = isSmallScreen ? 14 : 16;
+  
+  return (
+    <View style={{
+      backgroundColor: backgroundColor,
+      borderRadius: theme.borderRadius.xl,
+      padding: cardPadding,
+      flex: 1,
+      marginHorizontal: 0,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+      borderLeftWidth: 4,
+      borderLeftColor: accentColor,
+      minHeight: isSmallScreen ? 70 : 80,
+      maxWidth: isLargeScreen ? 180 : undefined // Limite máximo em telas grandes
+    }}>
+      <View style={{ 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: theme.spacing.xs
+      }}>
+        <Text 
+          numberOfLines={1}
+          style={{ 
+            fontSize: titleFontSize, 
+            color: theme.colors.textSecondary,
+            fontWeight: '600',
+            flex: 1
+          }}
+        >
+          {title}
+        </Text>
+        <View style={{
+          backgroundColor: accentColor,
+          borderRadius: theme.borderRadius.sm,
+          width: iconSize,
+          height: iconSize,
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <MaterialIcons name={icon as any} size={iconInnerSize} color="#ffffff" />
+        </View>
+      </View>
+      
+      <Text 
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={{ 
+          fontSize: valueFontSize, 
+          fontWeight: '800', 
+          color: theme.colors.text,
+          marginBottom: 2
+        }}
+      >
+        {value}
+      </Text>
+      
+      <Text 
+        numberOfLines={1}
+        style={{ 
+          fontSize: subtitleFontSize, 
+          color: theme.colors.textSecondary,
+          fontWeight: '500'
+        }}
+      >
+        {subtitle}
+      </Text>
+    </View>
+  );
+};
+
+// Componente de gráfico de barras modernizado para mobile
 const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ data }) => {
+  const { width: screenWidth } = useWindowDimensions();
   if (!data || data.length === 0) {
     return (
-      <View style={{ alignItems: 'center', marginVertical: 16, height: 200 }}>
-        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-          Nenhum dado de produção disponível
+      <View style={{ 
+        alignItems: 'center', 
+        marginVertical: theme.spacing.lg, 
+        height: 160, 
+        justifyContent: 'center',
+        backgroundColor: '#f8fafc',
+        borderRadius: theme.borderRadius.xl,
+        padding: theme.spacing.lg,
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
+      }}>
+        <MaterialIcons name="equalizer" size={32} color={theme.colors.textSecondary} />
+        <Text style={{ 
+          color: theme.colors.textSecondary, 
+          textAlign: 'center',
+          fontSize: theme.fontSizes.sm,
+          fontWeight: '500',
+          marginTop: theme.spacing.sm
+        }}>
+          Nenhum dado disponível
         </Text>
       </View>
     );
   }
 
-  const chartWidth = width - 96;
-  const chartHeight = 200;
-  const maxValue = Math.max(...data.map(d => d.value));
-  const barWidth = (chartWidth - 80) / data.length;
-  const padding = { top: 20, right: 20, bottom: 40, left: 60 };
+  // Tamanho responsivo e adaptativo para diferentes tamanhos de tela
+  const baseChartWidth = Math.min(screenWidth - 40, 480);
+  const chartHeight = 140;
+  const maxValue = Math.max(...data.map(d => d.value), 1);
+  const padding = { top: 20, right: 16, bottom: 30, left: 16 };
+  
+  // Calcular largura das barras para evitar overflow
+  const availableWidth = baseChartWidth - padding.left - padding.right;
+  const barGroupWidth = availableWidth / data.length;
+  const actualBarWidth = Math.min(barGroupWidth * 0.7, 28); // Máximo 28px por barra
+  const showLabels = barGroupWidth >= 14; // Só mostrar labels se houver espaço
 
   return (
-    <View style={{ alignItems: 'center', marginVertical: 16 }}>
-      <Svg width={chartWidth} height={chartHeight + padding.top + padding.bottom}>
-        {/* Grid lines */}
-        {[0, 1, 2, 3, 4].map((i) => {
-          const y = padding.top + (i * chartHeight) / 4;
-          const value = Math.round(maxValue - (i * maxValue) / 4);
-          return (
-            <G key={i}>
+    <View style={{ marginVertical: theme.spacing.md, alignItems: 'center' }}>
+      <View style={{ alignItems: 'center' }}>
+        <Svg width={baseChartWidth} height={chartHeight + padding.top + padding.bottom}>
+          {/* Background sutil */}
+          <Rect
+            x={0}
+            y={0}
+            width={baseChartWidth}
+            height={chartHeight + padding.top + padding.bottom}
+            fill="#fafbfc"
+            rx={8}
+          />
+          
+          {/* Grid lines horizontais sutis */}
+          {[1, 2, 3].map((i) => {
+            const y = padding.top + (i * chartHeight) / 4;
+            return (
               <Line
+                key={i}
                 x1={padding.left}
                 y1={y}
-                x2={chartWidth - padding.right}
+                x2={baseChartWidth - padding.right}
                 y2={y}
-                stroke={theme.colors.border}
+                stroke="#e5e7eb"
                 strokeWidth={0.5}
-                opacity={0.5}
+                opacity={0.7}
               />
-              <SvgText
-                x={padding.left - 10}
-                y={y + 3}
-                fontSize="10"
-                fill={theme.colors.textSecondary}
-                textAnchor="end"
-              >
-                {value}
-              </SvgText>
-            </G>
-          );
-        })}
+            );
+          })}
 
-        {/* Barras */}
-        {data.map((item, index) => {
-          const barHeight = (item.value / maxValue) * chartHeight;
-          const x = padding.left + index * barWidth + barWidth * 0.1;
-          const y = padding.top + chartHeight - barHeight;
-          
-          return (
-            <G key={index}>
-              <Rect
-                x={x}
-                y={y}
-                width={barWidth * 0.8}
-                height={barHeight}
-                fill={theme.colors.primary}
-                opacity={0.8}
-                rx={2}
-              />
-              {/* Valor da quantidade em cima da barra */}
-              <SvgText
-                x={x + (barWidth * 0.4)}
-                y={y - 8}
-                fontSize="10"
-                fill={theme.colors.text}
-                textAnchor="middle"
-                fontWeight="bold"
-              >
-                {item.value}
-              </SvgText>
-              <SvgText
-                x={x + (barWidth * 0.4)}
-                y={padding.top + chartHeight + 15}
-                fontSize="9"
-                fill={theme.colors.textSecondary}
-                textAnchor="middle"
-              >
-                {item.hour.split(':')[0]}h
-              </SvgText>
-            </G>
-          );
-        })}
+          {/* Barras com gradiente e estilo moderno */}
+          {data.map((item, index) => {
+            const barHeight = Math.max((item.value / maxValue) * chartHeight, 4);
+            const x = padding.left + index * barGroupWidth + (barGroupWidth - actualBarWidth) / 2;
+            const y = padding.top + chartHeight - barHeight;
+            
+            return (
+              <G key={index}>
+                {/* Barra principal */}
+                <Rect
+                  x={x}
+                  y={y}
+                  width={actualBarWidth}
+                  height={barHeight}
+                  fill="#3b82f6"
+                  rx={Math.min(actualBarWidth / 8, 4)}
+                  ry={Math.min(actualBarWidth / 8, 4)}
+                />
+                
+                {/* Efeito de gradiente/highlight */}
+                {actualBarWidth >= 8 && (
+                  <Rect
+                    x={x + 2}
+                    y={y}
+                    width={actualBarWidth - 4}
+                    height={Math.max(barHeight * 0.3, 2)}
+                    fill="#60a5fa"
+                    rx={2}
+                    ry={2}
+                    opacity={0.8}
+                  />
+                )}
+                
+                {/* Valor em cima da barra (apenas se houver espaço) */}
+                {barHeight > 20 && showLabels && item.value > 0 && (
+                  <SvgText
+                    x={x + actualBarWidth / 2}
+                    y={y - 6}
+                    fontSize="9"
+                    fill={theme.colors.text}
+                    textAnchor="middle"
+                    fontWeight="700"
+                  >
+                    {item.value}
+                  </SvgText>
+                )}
+                
+                {/* Label do horário */}
+                {showLabels && (
+                  <SvgText
+                    x={x + actualBarWidth / 2}
+                    y={padding.top + chartHeight + 18}
+                    fontSize="9"
+                    fill={theme.colors.textSecondary}
+                    textAnchor="middle"
+                    fontWeight="600"
+                  >
+                    {item.hour.split(':')[0]}h
+                  </SvgText>
+                )}
+              </G>
+            );
+          })}
 
-        {/* Eixo X */}
-        <Line
-          x1={padding.left}
-          y1={padding.top + chartHeight}
-          x2={chartWidth - padding.right}
-          y2={padding.top + chartHeight}
-          stroke={theme.colors.border}
-          strokeWidth={1}
-        />
-
-        {/* Eixo Y */}
-        <Line
-          x1={padding.left}
-          y1={padding.top}
-          x2={padding.left}
-          y2={padding.top + chartHeight}
-          stroke={theme.colors.border}
-          strokeWidth={1}
-        />
-      </Svg>
+          {/* Linha base sutil */}
+          <Line
+            x1={padding.left}
+            y1={padding.top + chartHeight}
+            x2={baseChartWidth - padding.right}
+            y2={padding.top + chartHeight}
+            stroke="#d1d5db"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </View>
+      
+      {/* Valor máximo para referência */}
+      {maxValue > 0 && (
+        <Text style={{
+          fontSize: theme.fontSizes.xs,
+          color: theme.colors.textSecondary,
+          marginTop: theme.spacing.sm,
+          textAlign: 'center'
+        }}>
+          Máximo: {maxValue} unidades
+        </Text>
+      )}
     </View>
   );
 };
 
-// Componente do header com logo e logout
+// Componente do header modernizado
 const DashboardHeader: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   return (
-    <View style={{
-      backgroundColor: '#00BFFF',
-      paddingTop: 50,
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
+    <LinearGradient
+      colors={['#1e40af', '#2563eb', '#3b82f6']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{
+        paddingTop: 50,
+        paddingBottom: 24,
+        paddingHorizontal: theme.spacing.lg,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        shadowColor: theme.colors.shadow,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 10
+      }}
+    >
+      {/* Logo VITON */}
       <View style={{
-        backgroundColor: '#FFD700',
-        padding: 8,
-        borderRadius: 8,
-        width: 60,
-        height: 40,
+        backgroundColor: '#fbbf24',
+        borderRadius: theme.borderRadius.xl,
+        width: 58,
+        height: 42,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 5
       }}>
-        <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#000' }}>VITON</Text>
+        <Text style={{ 
+          fontSize: theme.fontSizes.xs, 
+          fontWeight: '900', 
+          color: '#000',
+          letterSpacing: 0.8
+        }}>VITON</Text>
       </View>
       
+      {/* Logo PCOUNT */}
       <Text style={{
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
+        fontSize: theme.fontSizes['3xl'],
+        fontWeight: '900',
+        color: theme.colors.textInverse,
         textAlign: 'center',
-        flex: 1
+        flex: 1,
+        letterSpacing: -0.5,
+        marginHorizontal: theme.spacing.lg
       }}>PCOUNT</Text>
       
+      {/* Botão Logout */}
       <TouchableOpacity
         onPress={onLogout}
         style={{
-          backgroundColor: '#4A5568',
-          padding: 8,
-          borderRadius: 8,
-          width: 40,
-          height: 40,
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: theme.borderRadius.xl,
+          width: 44,
+          height: 44,
           justifyContent: 'center',
-          alignItems: 'center'
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+          elevation: 5
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 18 }}>⏻</Text>
+        <MaterialIcons name="power-settings-new" size={22} color={theme.colors.textInverse} />
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -371,88 +715,190 @@ const DateSelector: React.FC<{
           setShowModal(true);
         }}
         style={{
-          backgroundColor: '#2D3748',
-          paddingHorizontal: 16,
-          paddingVertical: 8,
-          borderRadius: 20,
-          marginBottom: 8,
-          alignSelf: 'flex-start'
+          backgroundColor: '#ffffff',
+          paddingHorizontal: theme.spacing.md,
+          paddingVertical: theme.spacing.sm,
+          borderRadius: 16,
+          marginBottom: 0,
+          alignSelf: 'flex-start',
+          borderWidth: 1,
+          borderColor: '#e2e8f0',
+          shadowColor: '#64748b',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+          elevation: 3,
+          flexDirection: 'row',
+          alignItems: 'center',
+          minWidth: 160
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>
-          De: {formatDate(startDate)} Até: {formatDate(endDate)}
-        </Text>
+        <View style={{
+          backgroundColor: '#3b82f6',
+          borderRadius: 8,
+          width: 32,
+          height: 32,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: theme.spacing.sm
+        }}>
+          <MaterialIcons name="date-range" size={18} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ 
+            color: '#475569', 
+            fontSize: 10, 
+            fontWeight: '500',
+            marginBottom: 2
+          }}>
+            Período selecionado
+          </Text>
+          <Text style={{ 
+            color: '#1e293b', 
+            fontSize: 12, 
+            fontWeight: '700'
+          }}>
+            {formatDate(startDate)} - {formatDate(endDate)}
+          </Text>
+        </View>
+        <MaterialIcons name="keyboard-arrow-down" size={20} color="#64748b" />
       </TouchableOpacity>
       
-      <Modal visible={showModal} transparent animationType="fade">
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
+      <Modal visible={showModal} transparent animationType="slide">
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
           <View style={{
-            backgroundColor: '#2D3748',
-            borderRadius: 12,
-            padding: 20,
-            width: '80%',
-            maxHeight: '70%'
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            justifyContent: 'flex-end',
+            alignItems: 'center'
           }}>
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
-              Selecionar Período
-            </Text>
+            <View style={{
+              backgroundColor: '#ffffff',
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingTop: theme.spacing.xl,
+              paddingHorizontal: theme.spacing.xl,
+              paddingBottom: theme.spacing.lg,
+              width: '100%',
+              maxHeight: '75%',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -5 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 10
+            }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: theme.spacing.lg
+            }}>
+              <View style={{
+                backgroundColor: '#3b82f6',
+                borderRadius: 10,
+                width: 36,
+                height: 36,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: theme.spacing.md
+              }}>
+                <MaterialIcons name="date-range" size={20} color="#ffffff" />
+              </View>
+              <Text style={{ 
+                color: '#1e293b', 
+                fontSize: theme.fontSizes.lg, 
+                fontWeight: '700'
+              }}>
+                Selecionar Período
+              </Text>
+            </View>
             
+            <ScrollView 
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              style={{ maxHeight: '100%' }}
+            >
             {/* Seleção manual de datas */}
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{ color: '#fff', fontSize: 14, marginBottom: 8 }}>Data Inicial:</Text>
+            <View style={{ marginBottom: theme.spacing.lg }}>
+              <Text style={{ 
+                color: '#475569', 
+                fontSize: theme.fontSizes.sm, 
+                fontWeight: '600',
+                marginBottom: theme.spacing.sm
+              }}>
+                Data Inicial:
+              </Text>
               <View style={{ 
-                backgroundColor: '#4A5568', 
-                borderRadius: 8, 
-                marginBottom: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 4
+                backgroundColor: '#f8fafc', 
+                borderRadius: 16, 
+                marginBottom: theme.spacing.md,
+                paddingHorizontal: theme.spacing.md,
+                paddingVertical: theme.spacing.sm,
+                borderWidth: 1,
+                borderColor: '#e2e8f0'
               }}>
                 <Input
                   value={tempStartDate}
                   onChangeText={setTempStartDate}
                   placeholder="dd/mm/yyyy"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor="#94a3b8"
                   style={{ 
-                    color: '#fff', 
+                    color: '#1e293b', 
                     backgroundColor: 'transparent',
                     borderWidth: 0,
                     margin: 0,
-                    height: 40
+                    height: 40,
+                    fontSize: theme.fontSizes.sm
                   }}
                 />
               </View>
               
-              <Text style={{ color: '#fff', fontSize: 14, marginBottom: 8 }}>Data Final:</Text>
+              <Text style={{ 
+                color: '#475569', 
+                fontSize: theme.fontSizes.sm, 
+                fontWeight: '600',
+                marginBottom: theme.spacing.sm
+              }}>
+                Data Final:
+              </Text>
               <View style={{ 
-                backgroundColor: '#4A5568', 
-                borderRadius: 8, 
-                marginBottom: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 4
+                backgroundColor: '#f8fafc', 
+                borderRadius: 16, 
+                marginBottom: theme.spacing.md,
+                paddingHorizontal: theme.spacing.md,
+                paddingVertical: theme.spacing.sm,
+                borderWidth: 1,
+                borderColor: '#e2e8f0'
               }}>
                 <Input
                   value={tempEndDate}
                   onChangeText={setTempEndDate}
                   placeholder="dd/mm/yyyy"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor="#94a3b8"
                   style={{ 
-                    color: '#fff', 
+                    color: '#1e293b', 
                     backgroundColor: 'transparent',
                     borderWidth: 0,
                     margin: 0,
-                    height: 40
+                    height: 40,
+                    fontSize: theme.fontSizes.sm
                   }}
                 />
               </View>
             </View>
             
             {/* Períodos pré-definidos */}
-            <Text style={{ color: '#fff', fontSize: 14, marginBottom: 8 }}>Períodos rápidos:</Text>
+            <Text style={{ 
+              color: '#475569', 
+              fontSize: theme.fontSizes.sm, 
+              fontWeight: '600',
+              marginBottom: theme.spacing.sm
+            }}>
+              Períodos rápidos:
+            </Text>
             {presetRanges.map((range, index) => (
               <TouchableOpacity
                 key={index}
@@ -462,45 +908,73 @@ const DateSelector: React.FC<{
                   setTempEndDate(formatDateForInput(range.end));
                 }}
                 style={{
-                  backgroundColor: '#4A5568',
-                  padding: 12,
-                  borderRadius: 8,
-                  marginBottom: 8
+                  backgroundColor: '#3b82f6',
+                  paddingHorizontal: theme.spacing.lg,
+                  paddingVertical: theme.spacing.md,
+                  borderRadius: 16,
+                  marginBottom: theme.spacing.sm,
+                  flexDirection: 'row',
+                  alignItems: 'center'
                 }}
               >
-                <Text style={{ color: '#fff', textAlign: 'center' }}>{range.label}</Text>
+                <MaterialIcons name="schedule" size={16} color="#ffffff" style={{ marginRight: theme.spacing.sm }} />
+                <Text style={{ 
+                  color: '#ffffff', 
+                  fontWeight: '600',
+                  fontSize: theme.fontSizes.sm
+                }}>
+                  {range.label}
+                </Text>
               </TouchableOpacity>
             ))}
+            </ScrollView>
             
-            <View style={{ flexDirection: 'row', marginTop: 16 }}>
+            <View style={{ flexDirection: 'row', marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
               <TouchableOpacity
                 onPress={() => setShowModal(false)}
                 style={{
-                  backgroundColor: '#E53E3E',
-                  padding: 12,
-                  borderRadius: 8,
+                  backgroundColor: '#f1f5f9',
+                  paddingVertical: theme.spacing.md,
+                  paddingHorizontal: theme.spacing.lg,
+                  borderRadius: 16,
                   flex: 1,
-                  marginRight: 8
+                  borderWidth: 1,
+                  borderColor: '#e2e8f0'
                 }}
               >
-                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Cancelar</Text>
+                <Text style={{ 
+                  color: '#475569', 
+                  textAlign: 'center', 
+                  fontWeight: '600',
+                  fontSize: theme.fontSizes.sm
+                }}>
+                  Cancelar
+                </Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleSave}
                 style={{
-                  backgroundColor: '#00BFFF',
-                  padding: 12,
-                  borderRadius: 8,
-                  flex: 1,
-                  marginLeft: 8
+                  backgroundColor: '#3b82f6',
+                  paddingVertical: theme.spacing.md,
+                  paddingHorizontal: theme.spacing.lg,
+                  borderRadius: 16,
+                  flex: 1
                 }}
               >
-                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Aplicar</Text>
+                <Text style={{ 
+                  color: '#ffffff', 
+                  textAlign: 'center', 
+                  fontWeight: '700',
+                  fontSize: theme.fontSizes.sm
+                }}>
+                  Aplicar
+                </Text>
               </TouchableOpacity>
             </View>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -521,34 +995,103 @@ const ProductionSelector: React.FC<{
       <TouchableOpacity
         onPress={() => setShowModal(true)}
         style={{
-          backgroundColor: '#4A5568',
-          padding: 12,
-          borderRadius: 8,
-          marginBottom: 16
+          backgroundColor: '#ffffff',
+          paddingHorizontal: theme.spacing.md,
+          paddingVertical: theme.spacing.sm,
+          borderRadius: 16,
+          marginBottom: 0,
+          borderWidth: 1,
+          borderColor: '#e2e8f0',
+          shadowColor: '#64748b',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+          elevation: 3,
+          flexDirection: 'row',
+          alignItems: 'center',
+          alignSelf: 'flex-start',
+          minWidth: 140
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
-          {selectedLineId ? selectedLine?.name || 'Linha específica' : 'Todo(s)'}
-        </Text>
+        <View style={{
+          backgroundColor: '#10b981',
+          borderRadius: 8,
+          width: 32,
+          height: 32,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: theme.spacing.sm
+        }}>
+          <MaterialIcons name="factory" size={18} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ 
+            color: '#475569', 
+            fontSize: 10, 
+            fontWeight: '500',
+            marginBottom: 2
+          }}>
+            Linha de produção
+          </Text>
+          <Text 
+            numberOfLines={2}
+            style={{ 
+              color: '#1e293b', 
+              fontSize: 12, 
+              fontWeight: '700',
+              lineHeight: 14
+            }}>
+            {selectedLineId ? selectedLine?.name || 'Linha específica' : 'Todas as Linhas'}
+          </Text>
+        </View>
+        <MaterialIcons name="keyboard-arrow-down" size={20} color="#64748b" />
       </TouchableOpacity>
       
-      <Modal visible={showModal} transparent animationType="fade">
+      <Modal visible={showModal} transparent animationType="slide">
         <View style={{
           flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
           justifyContent: 'center',
-          alignItems: 'center'
+          alignItems: 'center',
+          padding: theme.spacing.lg
         }}>
           <View style={{
-            backgroundColor: '#4A5568',
-            borderRadius: 12,
-            padding: 20,
-            width: '80%',
-            maxHeight: '70%'
+            backgroundColor: '#ffffff',
+            borderRadius: 24,
+            padding: theme.spacing.xl,
+            width: '100%',
+            maxWidth: 320,
+            maxHeight: '80%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.25,
+            shadowRadius: 20,
+            elevation: 10
           }}>
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
-              Todo(s)
-            </Text>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: theme.spacing.lg
+            }}>
+              <View style={{
+                backgroundColor: '#10b981',
+                borderRadius: 10,
+                width: 36,
+                height: 36,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: theme.spacing.md
+              }}>
+                <MaterialIcons name="factory" size={20} color="#ffffff" />
+              </View>
+              <Text style={{ 
+                color: '#1e293b', 
+                fontSize: theme.fontSizes.lg, 
+                fontWeight: '700'
+              }}>
+                Selecionar Linha
+              </Text>
+            </View>
             
             <TouchableOpacity
               onPress={() => {
@@ -556,16 +1099,42 @@ const ProductionSelector: React.FC<{
                 setShowModal(false);
               }}
               style={{
-                backgroundColor: selectedLineId === null ? '#00BFFF' : '#2D3748',
-                padding: 12,
-                borderRadius: 8,
-                marginBottom: 8
+                backgroundColor: selectedLineId === null ? '#3b82f6' : '#f8fafc',
+                paddingHorizontal: theme.spacing.lg,
+                paddingVertical: theme.spacing.md,
+                borderRadius: 16,
+                marginBottom: theme.spacing.sm,
+                borderWidth: selectedLineId === null ? 0 : 1,
+                borderColor: '#e2e8f0',
+                flexDirection: 'row',
+                alignItems: 'center'
               }}
             >
-              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Todo(s)</Text>
+              <View style={{
+                backgroundColor: selectedLineId === null ? 'rgba(255, 255, 255, 0.2)' : '#e2e8f0',
+                borderRadius: 6,
+                width: 24,
+                height: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: theme.spacing.sm
+              }}>
+                <MaterialIcons 
+                  name="check-circle" 
+                  size={16} 
+                  color={selectedLineId === null ? '#ffffff' : '#64748b'} 
+                />
+              </View>
+              <Text style={{ 
+                color: selectedLineId === null ? '#ffffff' : '#1e293b', 
+                fontWeight: selectedLineId === null ? '700' : '500',
+                fontSize: theme.fontSizes.sm
+              }}>
+                Todas as Linhas
+              </Text>
             </TouchableOpacity>
             
-            <ScrollView style={{ maxHeight: 200 }}>
+            <ScrollView style={{ maxHeight: 280 }} showsVerticalScrollIndicator={false}>
               {lines.map((line) => (
                 <TouchableOpacity
                   key={line.id}
@@ -574,13 +1143,39 @@ const ProductionSelector: React.FC<{
                     setShowModal(false);
                   }}
                   style={{
-                    backgroundColor: selectedLineId === line.id ? '#00BFFF' : '#2D3748',
-                    padding: 12,
-                    borderRadius: 8,
-                    marginBottom: 8
+                    backgroundColor: selectedLineId === line.id ? '#3b82f6' : '#f8fafc',
+                    paddingHorizontal: theme.spacing.lg,
+                    paddingVertical: theme.spacing.md,
+                    borderRadius: 16,
+                    marginBottom: theme.spacing.sm,
+                    borderWidth: selectedLineId === line.id ? 0 : 1,
+                    borderColor: '#e2e8f0',
+                    flexDirection: 'row',
+                    alignItems: 'center'
                   }}
                 >
-                  <Text style={{ color: '#fff', textAlign: 'center' }}>{line.name} {line.code}</Text>
+                  <View style={{
+                    backgroundColor: selectedLineId === line.id ? 'rgba(255, 255, 255, 0.2)' : '#e2e8f0',
+                    borderRadius: 6,
+                    width: 24,
+                    height: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: theme.spacing.sm
+                  }}>
+                    <MaterialIcons 
+                      name="check-circle" 
+                      size={16} 
+                      color={selectedLineId === line.id ? '#ffffff' : '#64748b'} 
+                    />
+                  </View>
+                  <Text style={{ 
+                    color: selectedLineId === line.id ? '#ffffff' : '#1e293b', 
+                    fontWeight: selectedLineId === line.id ? '700' : '500',
+                    fontSize: theme.fontSizes.sm
+                  }}>
+                    {line.name} {line.code}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -588,13 +1183,22 @@ const ProductionSelector: React.FC<{
             <TouchableOpacity
               onPress={() => setShowModal(false)}
               style={{
-                backgroundColor: '#E53E3E',
-                padding: 12,
-                borderRadius: 8,
-                marginTop: 16
+                backgroundColor: '#f1f5f9',
+                paddingVertical: theme.spacing.md,
+                borderRadius: 16,
+                marginTop: theme.spacing.lg,
+                borderWidth: 1,
+                borderColor: '#e2e8f0'
               }}
             >
-              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Fechar</Text>
+              <Text style={{ 
+                color: '#475569', 
+                textAlign: 'center', 
+                fontWeight: '600',
+                fontSize: theme.fontSizes.sm
+              }}>
+                Cancelar
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -605,6 +1209,12 @@ const ProductionSelector: React.FC<{
 
 export const DashboardScreen: React.FC = () => {
   const { selectedContract, currentUser, logout } = useAuth();
+  const { width } = useWindowDimensions();
+  
+  // Breakpoints dinâmicos baseados na largura atual
+  const isSmallScreen = width < 375;
+  const isMediumScreen = width >= 375 && width < 768;
+  const isLargeScreen = width >= 768;
   
   // Estados para filtros
   // Função para obter data do Brasil (deve estar antes dos useState)
@@ -704,85 +1314,168 @@ export const DashboardScreen: React.FC = () => {
     <Container>
       <DashboardHeader onLogout={handleLogout} />
       
-      <ScrollView style={{ padding: 16 }}>
-        <DateSelector
-          startDate={startDate}
-          endDate={endDate}
-          onDateChange={handleDateChange}
-        />
-        
-        <ProductionSelector
-          selectedLineId={selectedLineId}
-          onLineChange={setSelectedLineId}
-          lines={productionLines || []}
-        />
-        
-        <Text style={{ 
-          fontSize: 18, 
-          fontWeight: 'bold', 
-          color: theme.colors.text, 
-          marginBottom: 16,
-          textAlign: 'center'
-        }}>Dashboard {selectedLineId ? productionLines?.find(l => l.id === selectedLineId)?.name : ''}</Text>
-        
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
-          <Card style={{ flex: 1, marginRight: 8 }}>
-            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Horas</Text>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.warning }}>
-              {stats.operationHours}
-            </Text>
-            <Text style={{ fontSize: 10 }}>Operação</Text>
-          </Card>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ 
+          paddingBottom: theme.spacing.xl,
+          paddingHorizontal: getResponsivePadding(width),
+          paddingTop: getResponsivePadding(width)
+        }}
+      >
+        <View style={{ 
+          flexDirection: 'row', 
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: theme.spacing.lg,
+          gap: theme.spacing.lg,
+          paddingHorizontal: theme.spacing.xs
+        }}>
+          <View style={{ flex: 0.48 }}>
+            <DateSelector
+              startDate={startDate}
+              endDate={endDate}
+              onDateChange={handleDateChange}
+            />
+          </View>
           
-          <Card style={{ flex: 1, marginRight: 8 }}>
-            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Horas</Text>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.error }}>
-              {stats.productiveHours}
-            </Text>
-            <Text style={{ fontSize: 10 }}>Produtivas</Text>
-          </Card>
-          
-          <Card style={{ flex: 1 }}>
-            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Produção</Text>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.info }}>
-              {stats.avgProduction}
-            </Text>
-            <Text style={{ fontSize: 10 }}>Média / Hr</Text>
-          </Card>
+          <View style={{ flex: 0.48 }}>
+            <ProductionSelector
+              selectedLineId={selectedLineId}
+              onLineChange={setSelectedLineId}
+              lines={productionLines || []}
+            />
+          </View>
         </View>
         
-        <TouchableOpacity
-          onPress={() => {
-            // TODO: Navegar para tela de detalhes da produção
-            console.log('Navegar para detalhes da produção');
-          }}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Ver detalhes da produção"
-        >
-          <FeaturedCard>
-            <FeaturedCardAccent />
-            <FeaturedCardIcon>
-              <MaterialIcons name="bar-chart" size={20} color={theme.colors.white} />
-            </FeaturedCardIcon>
-            <FeaturedCardTitle>Total Produzido</FeaturedCardTitle>
-            <FeaturedCardValue>{stats.totalProduced.toLocaleString()}</FeaturedCardValue>
-            <FeaturedCardSubtitle>Unidades produzidas no período</FeaturedCardSubtitle>
-          </FeaturedCard>
-        </TouchableOpacity>
+        <Text style={{ 
+          fontSize: isSmallScreen ? 16 : isMediumScreen ? 18 : 20, 
+          fontWeight: 'bold', 
+          color: theme.colors.text, 
+          marginBottom: getResponsivePadding(width),
+          textAlign: 'center',
+          paddingHorizontal: theme.spacing.sm
+        }}>
+          Dashboard {selectedLineId ? productionLines?.find(l => l.id === selectedLineId)?.name : ''}
+        </Text>
         
-        <Card style={{ marginTop: 16 }}>
-          <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 16, color: theme.colors.text }}>TOTAL PRODUZIDO / HORA</Text>
+        {/* Cartões de estatísticas com layout responsivo real */}
+        {isSmallScreen ? (
+          // Layout responsivo para telas pequenas: primeiro card full-width, outros dois em linha
+          <View style={{ marginBottom: theme.spacing.lg }}>
+            {/* Primeiro cartão ocupando largura total */}
+            <View style={{ marginBottom: theme.spacing.sm }}>
+              <StatCard
+                title="Hora(s)"
+                value={`${stats.operationHours}`}
+                subtitle="Operação"
+                icon="schedule"
+                accentColor="#f59e0b"
+              />
+            </View>
+            
+            {/* Dois cartões em linha */}
+            <View style={{ 
+              flexDirection: 'row'
+            }}>
+              <View style={{ flex: 1, marginRight: getResponsiveCardSpacing(width) / 2 }}>
+                <StatCard
+                  title="Hora(s)"
+                  value={`${stats.productiveHours}`}
+                  subtitle="Produtivas"
+                  icon="warning"
+                  accentColor="#ef4444"
+                />
+              </View>
+              <View style={{ flex: 1, marginLeft: getResponsiveCardSpacing(width) / 2 }}>
+                <StatCard
+                  title="Produção"
+                  value={`${stats.avgProduction}`}
+                  subtitle="Média / Hr"
+                  icon="trending-up"
+                  accentColor="#06b6d4"
+                />
+              </View>
+            </View>
+          </View>
+        ) : (
+          // Layout horizontal tradicional para telas médias e grandes
+          <View style={{ 
+            flexDirection: 'row', 
+            marginBottom: theme.spacing.lg,
+            paddingHorizontal: theme.spacing.xs
+          }}>
+            <View style={{ flex: 1, marginRight: getResponsiveCardSpacing(width) }}>
+              <StatCard
+                title="Hora(s)"
+                value={`${stats.operationHours}`}
+                subtitle="Operação"
+                icon="schedule"
+                accentColor="#f59e0b"
+              />
+            </View>
+            
+            <View style={{ flex: 1, marginHorizontal: getResponsiveCardSpacing(width) }}>
+              <StatCard
+                title="Hora(s)"
+                value={`${stats.productiveHours}`}
+                subtitle="Produtivas"
+                icon="warning"
+                accentColor="#ef4444"
+              />
+            </View>
+            
+            <View style={{ flex: 1, marginLeft: getResponsiveCardSpacing(width) }}>
+              <StatCard
+                title="Produção"
+                value={`${stats.avgProduction}`}
+                subtitle="Média / Hr"
+                icon="trending-up"
+                accentColor="#06b6d4"
+              />
+            </View>
+          </View>
+        )}
+        
+        {/* Cartão do Total Produzido */}
+        <TotalProducedCard
+          value={stats.totalProduced}
+          title="TOTAL PRODUZIDO"
+          subtitle="Unidades produzidas no período"
+        />
+        
+        <View style={{ 
+          backgroundColor: '#ffffff',
+          borderRadius: theme.borderRadius.xl,
+          padding: isSmallScreen ? theme.spacing.md : theme.spacing.lg,
+          marginTop: theme.spacing.lg,
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 3
+        }}>
+          <Text style={{ 
+            fontSize: isSmallScreen ? 12 : 14, 
+            fontWeight: 'bold', 
+            marginBottom: theme.spacing.md, 
+            color: theme.colors.text,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: 0.5
+          }}>
+            TOTAL PRODUZIDO / HORA
+          </Text>
           <BarChart data={stats.hourlyProduction} />
           <Text style={{ 
-            fontSize: 11, 
+            fontSize: isSmallScreen ? 10 : 11, 
             color: theme.colors.textSecondary, 
             textAlign: 'center', 
-            marginTop: 8 
+            marginTop: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.sm
           }}>
             Unidades produzidas por horário de trabalho
           </Text>
-        </Card>
+        </View>
       </ScrollView>
     </Container>
   );

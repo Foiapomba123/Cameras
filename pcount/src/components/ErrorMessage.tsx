@@ -22,7 +22,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
     }}>
       <Text style={{
         fontSize: 18,
-        color: theme.colors.error || '#FF3B30',
+        color: theme.colors.error,
         textAlign: 'center',
         marginBottom: 16,
       }}>
