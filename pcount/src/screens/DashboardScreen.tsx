@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList, useWindowDimensions } from 'react-native';
+import { View, Text, ScrollView, Dimensions, TouchableOpacity, Modal, FlatList, useWindowDimensions, ImageBackground } from 'react-native';
 import { Svg, Rect, Text as SvgText, Line, G } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -453,13 +453,13 @@ const BarChart: React.FC<{ data: Array<{ hour: string; value: number }> }> = ({ 
   );
 };
 
-// Componente do header modernizado
+// Componente do header com fundo igual ao da tela de login
 const DashboardHeader: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const { width: screenWidth } = useWindowDimensions();
+  
   return (
-    <LinearGradient
-      colors={['#1e40af', '#2563eb', '#3b82f6']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <ImageBackground
+      source={require('../../assets/background.png')}
       style={{
         paddingTop: 50,
         paddingBottom: 24,
@@ -473,6 +473,7 @@ const DashboardHeader: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         shadowRadius: 16,
         elevation: 10
       }}
+      resizeMode="cover"
     >
       {/* Logo VITON */}
       <View style={{
@@ -496,16 +497,48 @@ const DashboardHeader: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         }}>VITON</Text>
       </View>
       
-      {/* Logo PCOUNT */}
-      <Text style={{
-        fontSize: theme.fontSizes['3xl'],
-        fontWeight: '900',
-        color: theme.colors.textInverse,
-        textAlign: 'center',
-        flex: 1,
-        letterSpacing: -0.5,
-        marginHorizontal: theme.spacing.lg
-      }}>PCOUNT</Text>
+      {/* Logo PCOUNT com design da tela de login */}
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        flex: 1
+      }}>
+        <Text style={{
+          fontSize: Math.min(screenWidth * 0.08, 32),
+          fontWeight: '800',
+          color: 'rgba(255, 255, 255, 0.95)',
+          letterSpacing: 1,
+          textShadowColor: 'rgba(0, 0, 0, 0.2)',
+          textShadowOffset: { width: 0, height: 2 },
+          textShadowRadius: 4
+        }}>
+          PC
+        </Text>
+        <View style={{
+          width: Math.max(screenWidth * 0.06, 24),
+          height: Math.max(screenWidth * 0.06, 24),
+          borderRadius: Math.max(screenWidth * 0.03, 12),
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginHorizontal: screenWidth * 0.01,
+          elevation: 6
+        }}>
+          <MaterialIcons name="visibility" size={Math.max(screenWidth * 0.03, 12)} color="#667eea" />
+        </View>
+        <Text style={{
+          fontSize: Math.min(screenWidth * 0.08, 32),
+          fontWeight: '800',
+          color: 'rgba(255, 255, 255, 0.95)',
+          letterSpacing: 1,
+          textShadowColor: 'rgba(0, 0, 0, 0.2)',
+          textShadowOffset: { width: 0, height: 2 },
+          textShadowRadius: 4
+        }}>
+          UNT
+        </Text>
+      </View>
       
       {/* Botão Logout */}
       <TouchableOpacity
@@ -526,9 +559,9 @@ const DashboardHeader: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           elevation: 5
         }}
       >
-        <MaterialIcons name="power-settings-new" size={22} color={theme.colors.textInverse} />
+        <MaterialIcons name="power-settings-new" size={22} color="rgba(255, 255, 255, 0.95)" />
       </TouchableOpacity>
-    </LinearGradient>
+    </ImageBackground>
   );
 };
 

@@ -24,11 +24,6 @@ Aplicação React Native construída com Expo para monitoramento e contagem de l
 # Instalar dependências
 npm install
 
-# Executar em modo desenvolvimento
-npm run web
-
-# Build para produção
-npm run build:web
 ```
 
 ## Estrutura do Projeto

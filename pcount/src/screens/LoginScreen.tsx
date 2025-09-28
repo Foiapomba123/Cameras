@@ -321,34 +321,35 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 </EyeIconContainer>
               </View>
             </InputWrapper>
+            
+            {/* Login Button - movido para abaixo do campo de senha */}
+            <LinearGradient
+              colors={['#4A90E2', '#357ABD']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                marginTop: Math.max(screenHeight * 0.02, 16),
+                borderRadius: theme.borderRadius.lg,
+              }}
+            >
+              <LoginButton onPress={handleLogin}>
+                <Text style={{
+                  color: 'white',
+                  fontSize: Math.max(screenWidth * 0.045, 18),
+                  fontWeight: '700',
+                  letterSpacing: 0.5
+                }}>
+                  Entrar
+                </Text>
+              </LoginButton>
+            </LinearGradient>
           </View>
           
         </FormContainer>
         </ContentArea>
 
-        {/* Bottom Action Area */}
+        {/* Bottom Action Area - apenas com versão */}
         <BottomActionArea>
-          {/* Login Button */}
-          <LinearGradient
-            colors={['#4A90E2', '#357ABD']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              marginTop: Math.max(screenHeight * 0.001, 2),
-            }}
-          >
-            <LoginButton onPress={handleLogin}>
-              <Text style={{
-                color: 'white',
-                fontSize: Math.max(screenWidth * 0.045, 18),
-                fontWeight: '700',
-                letterSpacing: 0.5
-              }}>
-                Entrar
-              </Text>
-            </LoginButton>
-          </LinearGradient>
-          
           {/* Version */}
           <VersionText>v2.0.0</VersionText>
         </BottomActionArea>

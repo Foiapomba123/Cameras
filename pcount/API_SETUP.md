@@ -106,7 +106,7 @@ const { login, loading, error } = useAuth();
 
 const handleLogin = async () => {
   const success = await login(email, password);
-  // Automatically falls back to mock data if API fails
+  
 };
 ```
 
@@ -158,22 +158,3 @@ Todas as telas agora mostram:
 - 🔄 **Loading**: Spinner durante carregamento
 - ❌ **Erro**: Mensagem com botão "Tentar novamente"
 - ✅ **Sucesso**: Dados carregados normalmente
-
-## Testando
-
-### Desenvolvimento Local
-1. Inicie sem backend → Usa dados mock
-2. Configure API_URL → Tenta conectar na API
-3. API indisponível → Volta para mock automaticamente
-
-### Com Backend Real
-1. Configure `EXPO_PUBLIC_API_URL`
-2. Implemente os endpoints listados acima
-3. A aplicação conectará automaticamente
-
-## Próximos Passos
-
-1. **Backend**: Implemente os endpoints da API
-2. **Autenticação**: Configure JWT/tokens se necessário
-3. **Websockets**: Para dados em tempo real (opcional)
-4. **Cache**: Implementar cache local se necessário
