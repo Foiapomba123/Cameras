@@ -1227,6 +1227,13 @@ export const DashboardScreen: React.FC = () => {
     usuarioId: currentUser?.id,
   }), [startDate, endDate, selectedLineId, currentUser?.id]);
   
+  // Buscar as estatísticas de produção usando o contrato selecionado e filtros
+  // IMPORTANTE: Este hook deve ser chamado ANTES dos early returns para manter a ordem dos hooks
+  const { data: productionStats, loading, error } = useProductionStats(
+    selectedContract?.id || '',
+    filters
+  );
+
   const handleDateChange = (start: string, end: string) => {
     setStartDate(start);
     setEndDate(end);
@@ -1236,7 +1243,7 @@ export const DashboardScreen: React.FC = () => {
     await logout();
   };
 
-  // Verificar se um contrato foi selecionado e usuário autenticado antes de chamar hooks
+  // Verificar se um contrato foi selecionado e usuário autenticado
   if (!selectedContract) {
     return (
       <Container style={{ padding: 16 }}>
@@ -1256,12 +1263,6 @@ export const DashboardScreen: React.FC = () => {
       </Container>
     );
   }
-
-  // Buscar as estatísticas de produção usando o contrato selecionado e filtros
-  const { data: productionStats, loading, error } = useProductionStats(
-    selectedContract.id,
-    filters
-  );
 
   // Mostrar loading
   if (loading) {
